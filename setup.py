@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text(encoding='utf-8')
 
 setup(
     name='continual-flowcrawl',
-    version='1.0.1',
+    version='1.0.2',
     description='A Python script to crawl and extract (regular or onion) webpages through TOR network.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -21,8 +21,8 @@ setup(
         'Repository': 'https://github.com/alpinebuster/continual-flowcrawl',
         'Issue Tracker': 'https://github.com/alpinebuster/continual-flowcrawl/issues',
     },
-    packages=find_packages(),
-    py_modules=['flowcrawl'],
+    package_dir={"": "flowcrawl"},
+    packages=find_packages(where="flowcrawl"),
     install_requires=[
         'pysocks',
         'beautifulsoup4>=4.7.1',
@@ -37,10 +37,10 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'flowcrawl=flowcrawl:main',
+            'flowcrawl=flowcrawl.flowcrawl:main',
         ],
     },
-    python_requires='>=3.9',
+    python_requires='>=3.11',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -54,8 +54,6 @@ setup(
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Topic :: Internet :: WWW/HTTP :: Indexing/Search',
