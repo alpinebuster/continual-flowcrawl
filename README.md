@@ -20,12 +20,30 @@
 See more configurations in `https://www.sitespeed.io/documentation/browsertime/configuration/`
 
 ```sh
+# Aliyun: https://dns.alidns.com/dns-query
+# Google: https://dns.google/dns-query
+# Tencent: https://doh.pub/dns-query
+curl -H "accept: application/dns-json" "https://cloudflare-dns.com/dns-query?name=https://tls-ech.dev/"
+
 docker build -t sitespeedio/browsertime .
+
+# --browser firefox \
+# --firefox.preference "network.dns.echconfig.enabled:true" \
+# --firefox.preference "network.dns.http3_echconfig.enabled:true" \
+# --firefox.preference "network.trr.mode:2" \
+# --firefox.preference "network.trr.uri:https://cloudflare-dns.com/dns-query" \
+# --firefox.preference "network.trr.confirmation_telemetry:false" \
+# --firefox.collectMozLog true --firefox.geckoProfiler true \
 docker run --rm -v "$(pwd)":/browsertime sitespeedio/browsertime:26.3.2 \
-    -n 50 \
-    --video --tcpdump --visualMetrics \
+    -n 5 \
+    --video --tcpdump --visualMetrics --har \
     --browser chrome \
-    https://www.sitespeed.io/
+    --chrome.args "enable-features=EncryptedClientHello" \
+    --chrome.args "use-dns-https-alpn" \
+    --chrome.args "force-dns-over-https=https://cloudflare-dns.com/dns-query" \
+    --chrome.args "disable-async-dns" \
+    --chrome.timeline --chrome.collectNetLog \
+    https://tls-ech.dev/
 ```
 
 ### What makes it simple and easy to use?

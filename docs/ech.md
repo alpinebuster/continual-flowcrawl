@@ -1,5 +1,5 @@
 # ECH (Encrypted Client Hello)
-> Ech checker: https://tls-ech.dev/.
+> Ech checker: `https://tls-ech.dev/`.
 
 把“你要访问哪个网站”这件事也加密起来。
 
