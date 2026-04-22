@@ -1,0 +1,29 @@
+<svg width="96" height="45" viewBox="20 40 80 40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Flow line (main visual) -->
+  <path d="M30 60 C45 35, 75 85, 90 60"
+        stroke="url(#grad)"
+        stroke-width="3.2"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Abstract spider (integrated into flow) -->
+  <g transform="translate(60,60)">
+    <!-- core -->
+    <circle r="10" fill="url(#grad)"/>
+
+    <!-- minimal legs -->
+    <g stroke="url(#grad)" stroke-width="2" stroke-linecap="round">
+      <path d="M-6,-6 L-12,-10"/>
+      <path d="M6,-6 L12,-10"/>
+      <path d="M-7,4 L-13,8"/>
+      <path d="M7,4 L13,8"/>
+    </g>
+  </g>
+</svg>

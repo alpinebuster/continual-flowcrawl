@@ -1,0 +1,25 @@
+[project]
+name = "continual-flowcrawl"
+version = "1.0.1"
+description = "Crawl, extract webpages, and capture PCAP through ECH/TOR/VPN."
+authors = [
+    {name = "zzz", email = "imzqqq@hotmail.com"}
+]
+license = {text = "GPL"}
+readme = "README.md"
+requires-python = ">=3.11,<3.14.1"
+dependencies = [
+    "pysocks==1.7.1",
+    "beautifulsoup4==4.14.3",
+    "yara-python==4.5.4",
+    "lxml==6.1.0",
+    "networkx==3.6.1",
+    "pyvis==0.3.2",
+]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
