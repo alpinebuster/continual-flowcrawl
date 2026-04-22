@@ -16,6 +16,18 @@
   [![license][license-shield]][license-link]
 </div>
 
+## Getting Started
+See more configurations in `https://www.sitespeed.io/documentation/browsertime/configuration/`
+
+```sh
+docker build -t sitespeedio/browsertime .
+docker run --rm -v "$(pwd)":/browsertime sitespeedio/browsertime:26.3.2 \
+    -n 50 \
+    --video --tcpdump --visualMetrics \
+    --browser chrome \
+    https://www.sitespeed.io/
+```
+
 ### What makes it simple and easy to use?
 
 If you are a terminal maniac you know that things have to be simple and clear. Passing the output into other tools is necessary and accuracy is the key.

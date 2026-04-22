@@ -1,0 +1,3 @@
+[submodule "browsertime"]
+	path = browsertime
+	url = https://github.com/alpinebuster/browsertime.git
