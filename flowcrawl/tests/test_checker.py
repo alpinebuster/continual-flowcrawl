@@ -24,7 +24,7 @@ class TestCheckFunctions(unittest.TestCase):
     def tearDownClass(cls):
         """ Test Suite Teardown. """
         # Remove test folder if it exists.
-        test_folder = 'output/flowcrawl'
+        test_folder = 'data/flowcrawl'
         if os.path.exists(test_folder):
             os.rmdir(test_folder)
 

@@ -52,17 +52,17 @@ def folder(website, verbose):
     :return: String 'output_folder' - Path of the output folder.
     """
     # Ensure base output directory exists
-    if not os.path.exists('output'):
+    if not os.path.exists('data'):
         try:
-            os.makedirs('output')
+            os.makedirs('data')
         except (OSError, PermissionError):
             pass  # Silently fail if can't create, will error later if needed
-    
+
     parsed = urlparse(website)
     if parsed.scheme != '':
-        output_folder = "output/" + urlparse(website).netloc
+        output_folder = "data/" + urlparse(website).netloc
     else:
-        output_folder = "output/" + website
+        output_folder = "data/" + website
     if not os.path.exists(output_folder):
         try:
             os.makedirs(output_folder)
@@ -126,11 +126,11 @@ def _read_resource_file(filename):
 
 def get_random_user_agent():
     """ Loads user-agents from res/user_agents.txt and returns a random one.
-    
+
     :return: String - Random user-agent string
     """
     global _user_agents_cache
-    
+
     if _user_agents_cache is None:
         user_agents_file = _read_resource_file('user_agents.txt')
         try:
@@ -143,7 +143,7 @@ def get_random_user_agent():
         except IOError:
             print(f"## Warning: Could not load user-agents from {user_agents_file}")
             return None
-    
+
     if _user_agents_cache:
         return random.choice(_user_agents_cache)
     return None
@@ -152,11 +152,11 @@ def get_random_user_agent():
 def get_random_proxy():
     """ Loads proxies from res/proxies.txt and returns a random one.
     If no proxies are found, displays a helpful message with instructions.
-    
+
     :return: String - Random proxy string (format: host:port) or None if no proxies available
     """
     global _proxies_cache
-    
+
     if _proxies_cache is None:
         proxies_file = _read_resource_file('proxies.txt')
         try:
@@ -169,7 +169,7 @@ def get_random_proxy():
         except IOError:
             print(f"## Warning: Could not load proxies from {proxies_file}")
             return None
-        
+
         # If no proxies found, show helpful message
         if not _proxies_cache:
             print("## No proxies found in res/proxies.txt")
@@ -179,7 +179,7 @@ def get_random_proxy():
             print("##   192.168.1.1:8080")
             print("##   proxy.example.com:3128")
             return None
-    
+
     if _proxies_cache:
         return random.choice(_proxies_cache)
     return None
@@ -187,7 +187,7 @@ def get_random_proxy():
 
 def setup_proxy_connection(proxy_string):
     """ Sets up a SOCKS5 proxy connection for a request.
-    
+
     :param proxy_string: String - Proxy in format "host:port"
     :return: None
     """
@@ -196,24 +196,24 @@ def setup_proxy_connection(proxy_string):
     except ImportError:
         print("## Error: pysocks module is required for proxy rotation. Install it with: pip install pysocks")
         return
-    
+
     try:
         if ':' not in proxy_string:
             print(f"## Warning: Invalid proxy format: {proxy_string}. Expected host:port")
             return
-        
+
         proxy_host, proxy_port = proxy_string.split(':', 1)
         proxy_port = int(proxy_port)
-        
+
         # Set socks proxy and wrap the urllib module
         socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, proxy_host, proxy_port)
         socket.socket = socks.socksocket
-        
+
         # Perform DNS resolution through the socket
         def getaddrinfo(*args):  # noqa
             return [(socket.AF_INET, socket.SOCK_STREAM, 6, '',
                      (args[0], args[1]))]
-        
+
         socket.getaddrinfo = getaddrinfo  # noqa
     except (ValueError, socks.HTTPError) as err:
         print(f"## Warning: Could not set up proxy {proxy_string}: {err}")
