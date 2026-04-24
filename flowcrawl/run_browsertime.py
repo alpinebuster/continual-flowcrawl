@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 import re
@@ -5,7 +6,7 @@ import time
 import random
 import subprocess
 from urllib.parse import urlparse
-from multiprocessing import Pool, cpu_count, Manager
+from multiprocessing import cpu_count
 from pathlib import Path
 
 DOCKER_IMAGE = "sitespeedio/browsertime:26.3.2"
@@ -19,10 +20,6 @@ WORKERS = min(2, cpu_count())
 print(f"Workers: {WORKERS}")
 NETWORKS = [f"flowcrawl-net-{i}" for i in range(WORKERS)]
 
-manager = Manager()
-NET_QUEUE = manager.Queue()
-for net in NETWORKS:
-    NET_QUEUE.put(net)
 
 def extract_urls(file_path: Path) -> list[str]:
     urls = set()
@@ -60,22 +57,61 @@ def ensure_networks(networks: list):
             subprocess.run(["docker", "network", "create", net], check=True)
 
 
-def run_task(args: tuple):
-    url, output_dir, idx, network_queue = args
-
-    # Startup jitter
-    time.sleep(random.uniform(0.5, 2.0))
-    os.makedirs(output_dir, exist_ok=True)
-    # Obtain an exclusive network (blocking)
-    network = network_queue.get()
+async def run_cmd(cmd, timeout):
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
 
     try:
+        await asyncio.wait_for(proc.wait(), timeout=timeout)
+    except asyncio.TimeoutError:
+        proc.kill()
+
+        try:
+            await proc.wait()
+        except Exception:
+            pass
+        raise
+
+    assert proc.returncode is not None
+    if proc.returncode != 0:
+        raise subprocess.CalledProcessError(proc.returncode, cmd)
+
+
+async def worker(worker_id, network, queue):
+    while True:
+        task = await queue.get()
+        if task is None:
+            queue.task_done()
+            break
+
+        url, output_dir, idx = task
+
+        os.makedirs(output_dir, exist_ok=True)
+        # Startup jitter
+        await asyncio.sleep(random.uniform(0.5, 2.0))
+
+        """
+        mkdir -p /tmp/chrome-profile-bt
+        google-chrome \
+            --user-data-dir=/tmp/chrome-profile-bt \
+            --no-first-run \
+            --no-default-browser-check
+
+        # Mac
+        open -na "Google Chrome" --args \
+            --user-data-dir=/tmp/chrome-profile-bt \
+            --no-first-run \
+            --no-default-browser-check
+        """
         cmd = [
             "docker", "run", "--rm",
             "--network", network,
             "-v", f"{output_dir}:/browsertime",
             DOCKER_IMAGE,
-            "-n", SAMPLES_PER_SITE,
+            "-n", str(SAMPLES_PER_SITE),
             "--video", "--tcpdump", "--visualMetrics",
             "--browser", "chrome",
             "--chrome.args", "enable-features=EncryptedClientHello",
@@ -83,37 +119,61 @@ def run_task(args: tuple):
             "--chrome.args", "force-dns-over-https=https://cloudflare-dns.com/dns-query",
             "--chrome.args", "disable-async-dns",
             "--chrome.collectNetLog",
+            "--chrome.netlog", "/browsertime/netlog.json",
             "--chrome.args", "disable-background-networking",
             "--chrome.args", "disable-component-update",
             "--chrome.args", "disable-sync",
             "--chrome.args", "disable-default-apps",
             "--chrome.args", "disable-domain-reliability",
             "--chrome.args", "disable-extensions",
+
+            # "--chrome.args", "user-data-dir=/tmp/chrome-profile-bt",
             url,
         ]
 
+        success = False
         for attempt in range(RETRY + 1):
             try:
-                print(f"[{idx}] RUN ({attempt+1}/{RETRY+1}) {url}")
-                subprocess.run(cmd, timeout=TIMEOUT, check=True)
-                return f"[{idx}] SUCCESS {url}"
+                print(f"[W{worker_id}][{idx}] RUN ({attempt+1}/{RETRY+1}) {url}")
+                await run_cmd(cmd, TIMEOUT)
+                print(f"[W{worker_id}][{idx}] SUCCESS {url}")
+                success = True
+                break
+            except asyncio.TimeoutError:
+                print(f"[W{worker_id}][{idx}] TIMEOUT {url}")
+            except Exception as e:
+                print(f"[W{worker_id}][{idx}] ERROR {url}: {e}")
 
-            except subprocess.TimeoutExpired:
-                print(f"[{idx}] TIMEOUT {url}")
+        if not success:
+            print(f"[W{worker_id}][{idx}] FAILED {url}")
 
-            except subprocess.CalledProcessError:
-                print(f"[{idx}] ERROR {url}")
+        queue.task_done()
 
-    finally:
-        # It must be returned after use
-        network_queue.put(network)
 
-    return f"[{idx}] FAILED {url}"
+async def main_async(tasks):
+    queue = asyncio.Queue()
+
+    for t in tasks:
+        await queue.put(t)
+
+    # Start the worker (each bound to one network)
+    workers = []
+    for i, net in enumerate(NETWORKS):
+        workers.append(asyncio.create_task(worker(i, net, queue)))
+
+    # Wait until the task is completed
+    await queue.join()
+
+    # Stop the worker
+    for _ in workers:
+        await queue.put(None)
+
+    await asyncio.gather(*workers)
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python run_browsertime.py <file_or_dir>")
+        print("Usage: `python run_browsertime.py <file_or_dir>`")
         return
     ensure_networks(NETWORKS)
 
@@ -134,31 +194,24 @@ def main():
     for i, url in enumerate(sorted(all_urls)):
         parsed = urlparse(url)
         domain = parsed.netloc
-        output_dir = os.path.abspath(f"data/{domain}")
+        output_dir = os.path.abspath(f"output/{domain}")
 
         # Skip completed
         if is_task_done(output_dir):
             print(f"[SKIP] {url}")
             continue
-        tasks.append((url, output_dir, i, NET_QUEUE))
+        tasks.append((url, output_dir, i))
 
     print(f"Tasks to run: {len(tasks)}")
     if not tasks:
         print("Nothing to do.")
         return
 
-    with Pool(WORKERS) as pool:
-        results = pool.map(run_task, tasks)
-
-    success = sum(1 for r in results if "SUCCESS" in r)
-    failed = sum(1 for r in results if "FAILED" in r)
-    print("\n===== SUMMARY =====")
-    print(f"Success: {success}")
-    print(f"Failed : {failed}")
-    print("===================")
-    for r in results:
-        print(r)
+    asyncio.run(main_async(tasks))
 
 
 if __name__ == "__main__":
+    """e.g.
+       `python ./flowcrawl/run_browsertime.py data/links-for-request/ech/links-CF.txt`
+    """
     main()
