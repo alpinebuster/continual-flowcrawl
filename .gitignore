@@ -58,3 +58,4 @@ venv.bak/
 
 # PyCharm
 .idea/
+*.log

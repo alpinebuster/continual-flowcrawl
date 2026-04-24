@@ -9,9 +9,9 @@ from urllib.parse import urlparse
 from multiprocessing import cpu_count
 from pathlib import Path
 
-DOCKER_IMAGE = "sitespeedio/browsertime:26.3.2"
+DOCKER_IMAGE = "sitespeedio/browsertime:latest"
 
-TIMEOUT = 600   # Maximum time for each task (in seconds)
+TIMEOUT = 43200 # Maximum time for each task (in seconds, # 12 hours)
 RETRY = 2       # Number of retries
 
 SAMPLES_PER_SITE = 100
@@ -49,8 +49,6 @@ def ensure_networks(networks: list):
     for net in networks:
         result = subprocess.run(
             ["docker", "network", "inspect", net],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
         if result.returncode != 0:
             print(f"[+] Creating network: {net}")
@@ -65,7 +63,10 @@ async def run_cmd(cmd, timeout):
     )
 
     try:
-        await asyncio.wait_for(proc.wait(), timeout=timeout)
+        stdout, stderr = await asyncio.wait_for(
+            proc.communicate(),
+            timeout=timeout
+        )
     except asyncio.TimeoutError:
         proc.kill()
 
@@ -74,6 +75,12 @@ async def run_cmd(cmd, timeout):
         except Exception:
             pass
         raise
+
+    # Print subprocess output
+    if stdout:
+        print(stdout.decode(errors="ignore"), flush=True)
+    if stderr:
+        print(stderr.decode(errors="ignore"), flush=True)
 
     assert proc.returncode is not None
     if proc.returncode != 0:
@@ -119,7 +126,6 @@ async def worker(worker_id, network, queue):
             "--chrome.args", "force-dns-over-https=https://cloudflare-dns.com/dns-query",
             "--chrome.args", "disable-async-dns",
             "--chrome.collectNetLog",
-            "--chrome.netlog", "/browsertime/netlog.json",
             "--chrome.args", "disable-background-networking",
             "--chrome.args", "disable-component-update",
             "--chrome.args", "disable-sync",
@@ -172,6 +178,7 @@ async def main_async(tasks):
 
 
 def main():
+    print("=== SCRIPT STARTED ===", flush=True)
     if len(sys.argv) < 2:
         print("Usage: `python run_browsertime.py <file_or_dir>`")
         return
@@ -212,6 +219,6 @@ def main():
 
 if __name__ == "__main__":
     """e.g.
-       `python ./flowcrawl/run_browsertime.py data/links-for-request/ech/links-CF.txt`
+       `nohup python -u ./flowcrawl/run_browsertime.py data/links-for-request/ech/links-CF.txt > run_browsertime.log 2>&1 &`
     """
     main()
