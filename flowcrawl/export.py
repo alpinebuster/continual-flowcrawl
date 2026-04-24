@@ -84,7 +84,7 @@ def export_database(export_path, prefix, data, edges, titles, resources=None, ve
             "INSERT OR IGNORE INTO edges(from_url, to_url) VALUES(?, ?);",
             list(edges)
         )
-        
+
         # Resources
         res_payload = resources if resources is not None else data.get("resources", {})
         res_rows = []
@@ -104,4 +104,3 @@ def export_database(export_path, prefix, data, edges, titles, resources=None, ve
         conn.close()
 
     return db_path
-

@@ -78,63 +78,90 @@ docker run --rm \
     https://tls-ech.dev/
 ```
 
-### What makes it simple and easy to use?
-
-If you are a terminal maniac you know that things have to be simple and clear. Passing the output into other tools is necessary and accuracy is the key.
-
-With a single argument, you can read an .onion webpage or a regular one, through TOR Network and by using pipes you can pass the output at any other tool you prefer.
-
-```shell
-$ flowcrawl -u http://www.github.com/ | grep 'google-analytics'
-    <meta-name="google-analytics" content="UA-XXXXXX- ">
-```
-
-If you want to crawl the links of a webpage use the `-c` and **BAM** you got on a file all the inside links. You can even use `-d` to crawl them and so on. You can also use the argument `-p` to wait some seconds before the next crawl.
-
-```shell
-$ flowcrawl -v -u http://www.github.com/ -c -d 2 -p 2
-# TOR is ready!
-# URL: http://www.github.com/
-# Your IP: XXX.XXX.XXX.XXX
-# Crawler started from http://www.github.com/ with 2 depth crawl and 2 second(s) delay:
-# Step 1 completed with: 11 results
-# Step 2 completed with: 112 results
-# File created on /path/to/project/links.txt
-```
-
-> [!TIP]
-> Crawling is not illegal, but violating copyright *is*. It’s always best to double-check a website’s T&C before start crawling them. Some websites set up what’s called `robots.txt` to tell crawlers not to visit those pages.
-> <br>This crawler *will* allow you to go around this, but we always *recommend* respecting robots.txt.
-
 <hr>
 
-## Installation
+## FlowCrawl
+1. **Install dependencies**:<br>
+`pip install -r requirements.txt` or:
+```sh
+poetry install
+source $(poetry env info -p)/bin/activate
+# or
+. $(poetry env info -p)/bin/activate
 
-### Easy Installation:
-- from [PyPi][pypi-package]:<br>
-`pip install flowcrawl`
-- with homebrew:<br>
-*Coming soon...*
+# (Optional)
+pip install -e .
+```
 
-### Manual Installation:
-1. **Clone this repository**:<br>
-`git clone https://github.com/alpinebuster/continual-flowcrawl.git`
-2. **Install dependencies**:<br>
-`pip install -r requirements.txt`
-3. **Install and Start TOR Service**:
-    1. **Debian/Ubuntu**: <br>
-        `apt-get install tor`<br>
-        `service tor start`
-    2. **Windows**: Download [`tor.exe`][tor-download], and:<br>
-        `tor.exe --service install`<br>
-        `tor.exe --service start`
-    3. **MacOS**: <br>
-        `brew install tor`<br>
-        `brew services start tor`
-    4. For different distros, visit:<br>
-       [TOR Setup Documentation][tor-docs]
+2. **Install and Start TOR Service**:
+1) Debian/Ubuntu: <br>
+    `apt update && apt upgrade`
+    `apt-get install tor wget`<br>
+    `service tor start`
+2) Windows: Download [`tor.exe`][tor-download], and:<br>
+    `tor.exe --service install`<br>
+    `tor.exe --service start`
+3) MacOS: <br>
+    `brew install tor`<br>
+    `brew services start tor`
 
-## Arguments
+Advanced usage with bridges:
+
+```sh
+sudo apt install tor obfs4proxy
+sudo apt install snowflake-client -y
+
+"""
+UseBridges 1
+
+ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed
+Bridge obfs4 51.79.30.226:35077 6D0268328156594C41B50BF94EBD7CDCFAF985E2 cert=wQ35o1bPKT8CFmg/5C4eKmRMt4O+q6pBuflVe3vscbGS12bb4vwC5BnYepnNf0vgdDrnYQ iat-mode=0
+Bridge obfs4 146.59.116.226:50845 DA91DE63966E03676A9994BDB7A18D1DCE2FAF10 cert=IAur+EwfAIbdC8jy+Mi9xlmh5ouL577Ya6ygJBEChWS8lNiEfy3hU/IAvDZ5Ntw/w2Oidg iat-mode=0
+
+ClientTransportPlugin webtunnel exec /usr/bin/webtunnel
+Bridge webtunnel [2001:db8:f765:be98:4d81:b8cb:fadc:2bc6]:443 58A23BB757C3FDDBAA0E3CA5E631B7225A87F852 url=https://redlib.005184.xyz/wlDwrKzwL3J43jiDCjT0Mb0z ver=0.0.3
+Bridge webtunnel [2001:db8:ce90:3593:272e:4975:a031:55b]:443 12382A2F3912AD1983A97C8709CBAE47ADB60BE3 url=https://miranda.today/LWwxIXDHCyyScn7oDauPMTmX ver=0.0.3
+
+ClientTransportPlugin snowflake exec /usr/bin/snowflake-client
+Bridge snowflake
+Bridge snowflake
+"""
+sudo vi /etc/tor/torrc
+
+sudo systemctl enable tor
+sudo systemctl restart tor
+
+sudo systemctl status tor
+sudo netstat -lntp | grep tor
+sudo journalctl -e -f -u tor@default
+
+curl --socks5-hostname 127.0.0.1:9050 https://check.torproject.org
+>>> Congratulations. This browser is configured to use Tor
+
+wget -e use_proxy=yes \
+     -e https_proxy=socks5h://127.0.0.1:9050 \
+     https://example.com
+
+# The output IP should be the Tor exit node, not the real IP of your server
+curl --socks5-hostname 127.0.0.1:9050 https://api.ipify.org
+```
+
+3. **Google Chrome**. The version used to create this dataset is 119.0.6046.159. To download the current version as an example:
+    ```bash
+    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    sudo apt install ./google-chrome-stable_current_amd64.deb
+
+    # Make sure that Chrome is installed:
+    google-chrome --version
+    alias chrome="google-chrome"
+    ```
+
+4. **tshark 4.0.6 or higher**: Note that if you are a non-super user, then you will need to either allow non-super users to capture packets when downloading the package, or add the user to the set of users that can capture packets.
+    ```bash
+    apt install tshark
+    ```
+
+### Arguments
 | **arg**      | **Long**            | **Description**                                                                        |
 |--------------|---------------------|----------------------------------------------------------------------------------------|
 | **General**: |                     |                                                                                        |
@@ -163,13 +190,13 @@ $ flowcrawl -v -u http://www.github.com/ -c -d 2 -p 2
 | -vis         | --visualization     | Generate HTML visualization from SQLite database (requires -DB)                        |
 | -l           | --log               | Log file with visited URLs and their response code                                     |
 
-## Usage & Examples
+### Usage & Examples
 
-### As Extractor:
+#### As Extractor:
 To just extract a single webpage to terminal:
 
 ```shell
-$ python flowcrawl.py -u http://www.github.com
+$ python flowcrawl/main.py -u http://www.github.com
 <!DOCTYPE html>
 ...
 </html>
@@ -178,38 +205,38 @@ $ python flowcrawl.py -u http://www.github.com
 Extract into a file (github.htm) without the use of TOR:
 
 ```shell
-$ python flowcrawl.py -w -u http://www.github.com -o github.htm
+$ python flowcrawl/main.py -w -u http://www.github.com -o github.htm
 ## File created on /script/path/github.htm
 ```
 
 Extract to terminal and find only the line with google-analytics:
 
 ```shell
-$ python flowcrawl.py -u http://www.github.com | grep 'google-analytics'
+$ python flowcrawl/main.py -u http://www.github.com | grep 'google-analytics'
     <meta name="google-analytics" content="UA-*******-*">
 ```
 
 Extract to file and find only the line with google-analytics using yara:
 ```shell
-$ python flowcrawl.py -v -w -u https://github.com -e -y 0
+$ python flowcrawl/main.py -v -w -u https://github.com -e -y 0
 ...
 ```
+
 **_Note:_** update res/keyword.yar to search for other keywords.
 Use ```-y 0``` for raw html searching and ```-y 1``` for text search only.
 
 Extract a set of webpages (imported from file) to terminal:
 
 ```shell
-$ python flowcrawl.py -i links.txt
+$ python flowcrawl/main.py -i links.txt
 ...
 ```
 
-
-### As Crawler:
+#### As Crawler:
 Crawl the links of the webpage without the use of TOR, also show verbose output (really helpful):
 
 ```shell
-$ python flowcrawl.py -v -w -u http://www.github.com/ -c
+$ python flowcrawl/main.py -v -w -u http://www.github.com/ -c
 ## URL: http://www.github.com/
 ## Your IP: *.*.*.*
 ## Crawler Started from http://www.github.com/ with step 1 and wait 0
@@ -220,7 +247,7 @@ $ python flowcrawl.py -v -w -u http://www.github.com/ -c
 Crawl the webpage with depth 2 (2 clicks) and 5 seconds waiting before crawl the next page:
 
 ```shell
-$ python flowcrawl.py -v -u http://www.github.com/ -c -d 2 -p 5
+$ python flowcrawl/main.py -v -u http://www.github.com/ -c -d 2 -p 5
 ## TOR is ready!
 ## URL: http://www.github.com/
 ## Your IP: *.*.*.*
@@ -229,11 +256,12 @@ $ python flowcrawl.py -v -u http://www.github.com/ -c -d 2 -p 5
 ## Step 2 completed with: 112 results
 ## File created on /script/path/links.txt
 ```
-### As Both:
+
+#### As Both:
 You can crawl a page and also extract the webpages into a folder with a single command:
 
 ```shell
-$ python flowcrawl.py -v -u http://www.github.com/ -c -d 2 -p 5 -e
+$ python flowcrawl/main.py -v -u http://www.github.com/ -c -d 2 -p 5 -e
 ## TOR is ready!
 ## URL: http://www.github.com/
 ## Your IP: *.*.*.*
@@ -248,17 +276,17 @@ $ python flowcrawl.py -v -u http://www.github.com/ -c -d 2 -p 5 -e
 Following the same logic; you can parse all these pages to grep (for example) and search for specific text:
 
 ```shell
-$ python flowcrawl.py -u http://www.github.com/ -c -e | grep '</html>'
+$ python flowcrawl/main.py -u http://www.github.com/ -c -e | grep '</html>'
 </html>
 </html>
 ...
 ```
 
-### As Both + Keyword Search:
+#### As Both + Keyword Search:
 You can crawl a page, perform a keyword search and extract the webpages that match the findings into a folder with a single command:
 
 ```shell
-$ python flowcrawl.py -v -u http://www.github.com/ -c -d 2 -p 5 -e -y h
+$ python flowcrawl/main.py -v -u http://www.github.com/ -c -d 2 -p 5 -e -y h
 ## TOR is ready!
 ## URL: http://www.github.com/
 ## Your IP: *.*.*.*
@@ -274,45 +302,10 @@ Use ```-y h``` for raw html searching and ```-y t``` for text search only.*
 
 ---
 
-## TODO
-### Requirements
-The following was tested on Ubuntu 22.04.1 LTS.
-
-1) Python 3.7 or higher.
-2) wget:
-```bash
-apt update && apt upgrade
-apt install wget
-```
-
-3) Google Chrome. The version used to create this dataset is 119.0.6046.159. To download the current version as an example:
-```bash
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-sudo apt install ./google-chrome-stable_current_amd64.deb
-
-# Make sure that Chrome is installed:
-google-chrome --version
-```
-
-3) tshark 4.0.6 or higher: Note that if you are a non-super user, then you will need to either allow non-super users to capture packets when downloading the package, or add the user to the set of users that can capture packets.
-```bash
-apt install tshark
-```
-
-4) Python packages:
-```sh
-pip3 install bs4
-```
-
 ### Creating the dataset
-
-1) Set the following alias for the `chrome` command:
-```bashrc
-alias chrome="google-chrome"
-```
-
-2) Create the traces by issuing requests to webpages. The requests are issued
+Create the traces by issuing requests to webpages. The requests are issued
 one at a time:
+
 ```sh
 python3 create_trace.py --links_folder=<folder_path_containing_links> --output_folder=<path_to_output_folder> --requests_per_webpage=<number_of_requests> --starting_index=<index>
 ```

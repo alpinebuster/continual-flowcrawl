@@ -1,6 +1,6 @@
 [project]
 name = "continual-flowcrawl"
-version = "1.0.5"
+version = "1.0.6"
 description = "Crawl, extract webpages, and capture PCAP through ECH/TOR/VPN."
 authors = [
     {name = "zzz", email = "imzqqq@hotmail.com"}
@@ -15,10 +15,15 @@ dependencies = [
     "lxml==6.1.0",
     "networkx==3.6.1",
     "pyvis==0.3.2",
+    "bs4 (>=0.0.2,<0.0.3)",
 ]
 
 [tool.poetry]
-package-mode = false
+packages = [
+    { include = "flowcrawl" }
+]
+[tool.poetry.scripts]
+flowcrawl = "flowcrawl.main:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

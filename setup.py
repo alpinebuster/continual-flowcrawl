@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text(encoding='utf-8')
 
 setup(
     name='continual-flowcrawl',
-    version='1.0.5',
+    version='1.0.6',
     description='A Python script to crawl and extract (regular or onion) webpages through TOR network.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -37,7 +37,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'flowcrawl=flowcrawl.flowcrawl:main',
+            'flowcrawl=flowcrawl.main:main',
         ],
     },
     python_requires='>=3.11',
