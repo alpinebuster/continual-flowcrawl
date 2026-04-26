@@ -40,9 +40,10 @@ def collect_txt_files(input_path: str) -> list[Path]:
 
 
 def is_task_done(output_dir: str) -> bool:
-    result_file = os.path.join(output_dir, "browsertime.json")
-    # ≈ 1 KB
-    return os.path.exists(result_file) and os.path.getsize(result_file) > 1000
+    for path in Path(output_dir).rglob("browsertime.json"):
+        if path.stat().st_size > 1000:
+            return True
+    return False
 
 
 def ensure_networks(networks: list):

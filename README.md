@@ -76,6 +76,9 @@ docker run --rm \
     --chrome.args "disable-domain-reliability" \
     --chrome.args "disable-extensions" \
     https://tls-ech.dev/
+
+# or
+nohup python -u ./flowcrawl/run_browsertime.py data/links-for-request/ech/links-CF.txt > run_browsertime.log 2>&1 &
 ```
 
 Check `encrypted_client_hello` filed in the `chromeNetlog-*.json`, you will see something like this:
