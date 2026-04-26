@@ -78,6 +78,11 @@ docker run --rm \
     https://tls-ech.dev/
 ```
 
+Check `encrypted_client_hello` filed in the `chromeNetlog-*.json`, you will see something like this:
+```json
+{"params":{"cipher_suite":4865,"encrypted_client_hello":true,"is_resumed":false,"key_exchange_group":4588,"next_proto":"h2","peer_signature_algorithm":1027,"version":"TLS 1.3"},"phase":2,"source":{"id":90,"start_time":"332374709","type":9},"time":"332374921","type":61},
+```
+
 <hr>
 
 ## FlowCrawl
