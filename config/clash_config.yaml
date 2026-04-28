@@ -1,8 +1,8 @@
 mixed-port: 27890
 allow-lan: true
 bind-address: 0.0.0.0
-mode: rule
-log-level: info
+mode: global # rule, direct
+log-level: debug
 external-controller: 0.0.0.0:9090
 dns:
     enable: true

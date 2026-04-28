@@ -14,6 +14,8 @@ RUN set -eu && \
     rm -rf /tmp/* /var/cache/apk/* && \
     sed "1s/^/SocksPort 0.0.0.0:9050\n/" /etc/tor/torrc.sample > /etc/tor/torrc
 
+# 9050 - SOCKS Proxy Port (for "traffic")
+# 9051 - ControlPort (For control)
 EXPOSE 9050 9051
 
 HEALTHCHECK --interval=300s --timeout=15s --start-period=60s --start-interval=10s \
