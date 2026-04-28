@@ -43,7 +43,6 @@ Crawl:
 
 GitHub: github.com/alpinebuster/continual-flowcrawl.git
 License: GNU General Public License v3.0
-
 """
 
 import argparse
@@ -66,12 +65,11 @@ from flowcrawl.extractor import extractor
 from flowcrawl.export import export_json, export_xml, export_database
 from flowcrawl.visualization import export_visualization
 
-__version__ = "1.0.1"
+__version__ = "1.0.9"
 
 
-# Set socket and connection with TOR network
 def connect_tor(proxy_url, proxy_port):
-    """ Connect to TOR via DNS resolution through a socket.
+    """ Establish a connection through a SOCKS proxy and have DNS resolution completed on the Tor side instead of locally.
     :return: None or HTTPError.
     """
     try:
@@ -185,6 +183,13 @@ def main():
         dest='database_export',
         action='store_true',
         help='Export crawl findings and link graph to SQLite database'
+    )
+    parser.add_argument(
+        '-cap',
+        '--pcap',
+        dest='pcap_export',
+        action='store_true',
+        help='Export crawl network traffic to pcap'
     )
     parser.add_argument(
         '-vis',

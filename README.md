@@ -16,7 +16,7 @@
   [![license][license-shield]][license-link]
 </div>
 
-## Getting Started
+## BrowserTime
 See more configurations in `https://www.sitespeed.io/documentation/browsertime/configuration/`
 
 ```sh
@@ -89,6 +89,14 @@ Check `encrypted_client_hello` filed in the `chromeNetlog-*.json`, you will see 
 <hr>
 
 ## FlowCrawl
+> Requests → Tor(9050) → (tun0, Virtual Network Card, if enabled) → VPN Client(27890) → VPN Server → Internet
+
+This is the most common approach, typically used to hide Tor usage from your Internet Service Provider (ISP).
+
+- **Principle:** VPN client acts as a front proxy, and Tor’s traffic is sent through the encrypted tunnel established by VPN client.
+- **Effect:** Your ISP can only see that you are connected to a VPN and cannot detect Tor usage; Tor nodes only see the VPN server’s IP, not your real IP.
+- **Configuration:** Set `HTTPSProxy` or `Socks5Proxy` in Tor’s configuration to point to Clash’s local port.
+
 1. **Install dependencies**:<br>
 `pip install -r requirements.txt` or:
 ```sh
@@ -102,24 +110,17 @@ pip install -e .
 ```
 
 2. **Install and Start TOR Service**:
-1) Debian/Ubuntu: <br>
-    `apt update && apt upgrade`
-    `apt-get install tor wget`<br>
-    `service tor start`
-2) Windows: Download [`tor.exe`][tor-download], and:<br>
-    `tor.exe --service install`<br>
-    `tor.exe --service start`
-3) MacOS: <br>
-    `brew install tor`<br>
-    `brew services start tor`
+Start the clash first by running `docker compose --profile clash up -d`.
 
-Advanced usage with bridges:
+For advanced usage with bridges, start with the following configuration:
 
-```sh
-sudo apt install tor obfs4proxy
-sudo apt install snowflake-client -y
+"""txt
+#Use socks5h # Use SOCKS5 proxy and let DNS resolution also be carried out through the proxy (remote resolution)
+#HTTPSProxy 127.0.0.1:27890
+#HTTPSProxyAuthenticator user:password
+Socks5Proxy 127.0.0.1:27890
 
-"""
+
 UseBridges 1
 
 ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed
@@ -134,6 +135,25 @@ ClientTransportPlugin snowflake exec /usr/bin/snowflake-client
 Bridge snowflake
 Bridge snowflake
 """
+
+then start tor with this configuration:
+1) Debian/Ubuntu: <br>
+    `apt update && apt upgrade`
+    `apt-get install tor wget`<br>
+    `service tor start`
+2) Windows: Download [`tor.exe`][tor-download], and:<br>
+    `tor.exe --service install`<br>
+    `tor.exe --service start`
+3) MacOS: <br>
+    `brew install tor`<br>
+    `brew services start tor`
+
+More detailed script on linux:
+
+```sh
+sudo apt install tor obfs4proxy
+sudo apt install snowflake-client -y
+
 sudo vi /etc/tor/torrc
 
 sudo systemctl enable tor
@@ -144,7 +164,7 @@ sudo netstat -lntp | grep tor
 sudo journalctl -e -f -u tor@default
 
 curl --socks5-hostname 127.0.0.1:9050 https://check.torproject.org
->>> Congratulations. This browser is configured to use Tor
+# >>> "Congratulations. This browser is configured to use Tor."
 
 wget -e use_proxy=yes \
      -e https_proxy=socks5h://127.0.0.1:9050 \
@@ -153,21 +173,6 @@ wget -e use_proxy=yes \
 # The output IP should be the Tor exit node, not the real IP of your server
 curl --socks5-hostname 127.0.0.1:9050 https://api.ipify.org
 ```
-
-3. **Google Chrome**. The version used to create this dataset is 119.0.6046.159. To download the current version as an example:
-    ```bash
-    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-    sudo apt install ./google-chrome-stable_current_amd64.deb
-
-    # Make sure that Chrome is installed:
-    google-chrome --version
-    alias chrome="google-chrome"
-    ```
-
-4. **tshark 4.0.6 or higher**: Note that if you are a non-super user, then you will need to either allow non-super users to capture packets when downloading the package, or add the user to the set of users that can capture packets.
-    ```bash
-    apt install tshark
-    ```
 
 ### Arguments
 | **arg**      | **Long**            | **Description**                                                                        |
@@ -307,27 +312,6 @@ $ python flowcrawl/main.py -v -u http://www.github.com/ -c -d 2 -p 5 -e -y h
 
 ***Note:*** *Update res/keyword.yar to search for other keywords.
 Use ```-y h``` for raw html searching and ```-y t``` for text search only.*
-
----
-
-### Creating the dataset
-Create the traces by issuing requests to webpages. The requests are issued
-one at a time:
-
-```sh
-python3 create_trace.py --links_folder=<folder_path_containing_links> --output_folder=<path_to_output_folder> --requests_per_webpage=<number_of_requests> --starting_index=<index>
-```
-
-The parameters are as follows:
-- `--links_folder` is the path to the folder containing the links to the webpages to be used in the experiment. The folder is expected to contain subfolders of servers, and in each subfolder a file named `links.txt` which contains the links for different webpages, each link in a row.
-- `--output_folder` is the path to the folder where the traces will be saved. The output folder will contain subfolders for each server, and in each subfolder there will be a folder for each webpage, and in each webpage folder there will be a folder for each request. Each request folder will contain the pcap file, the HTML file, the NetLog file, log, and the key file. The key file is used to decrypt the traffic.
-- `--requests_per_webpage` is the number of requests to be sent to each webpage, sequentially.
-- `--starting_index` is a number to add as a prefix to the trace number. This is useful when running the script multiple times to create multiple datasets. The default value is 0.
-
-Usage example:
-```sh
-python3 create_trace.py --links_folder=links-for-request --output_folder=data2 --requests_per_webpage=100 --starting_index=0002
-```
 
 ## License
 “GPL” stands for “General Public License”. Using the GNU GPL will require that all the released improved versions be free software ([More info][gpl-faq]).

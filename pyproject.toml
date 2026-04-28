@@ -1,6 +1,6 @@
 [project]
 name = "continual-flowcrawl"
-version = "1.0.8"
+version = "1.0.9"
 description = "Crawl, extract webpages, and capture PCAP through ECH/TOR/VPN."
 authors = [
     {name = "zzz", email = "imzqqq@hotmail.com"}

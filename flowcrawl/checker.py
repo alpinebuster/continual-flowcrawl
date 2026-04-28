@@ -210,6 +210,8 @@ def setup_proxy_connection(proxy_string):
         socket.socket = socks.socksocket
 
         # Perform DNS resolution through the socket
+        # No longer call the system DNS (such as /etc/resolv.conf),
+        # directly hand over the "domain name" to the proxy for resolution
         def getaddrinfo(*args):  # noqa
             return [(socket.AF_INET, socket.SOCK_STREAM, 6, '',
                      (args[0], args[1]))]
