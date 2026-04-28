@@ -192,9 +192,9 @@ SocksPort 9050 # Default: Bind to localhost:9050 for local connections.
 #PublishServerDescriptor 0
 
 
-#HTTPSProxy 127.0.0.1:27890
+#HTTPSProxy clash:27890
 #HTTPSProxyAuthenticator user:password
-Socks5Proxy 127.0.0.1:27890
+Socks5Proxy clash:27890
 
 
 #UseBridges 0
