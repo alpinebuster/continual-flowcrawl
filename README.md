@@ -6,6 +6,7 @@
 
 <div align="center">
   <img width="50%" alt="Logo" src=".github/continual-flowcrawl.svg">
+  <a href="https://spec.torproject.org/"><img src="https://raw.githubusercontent.com/alpinebuster/continual-flowcrawl/main/.github/tor_logo.png" title="Tor Logo" style="max-width:100%;" width="256" /></a>
 
   # Continual Flow Crawl
   <p>It combines ease of use with the robust privacy features of ECH/Tor/VPN, allowing for secure and untraceable data collection.</p>
