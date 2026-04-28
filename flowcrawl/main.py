@@ -3,11 +3,11 @@
 """
 Crawl, capture PCAP, and extract webpages through ECH/TOR/VPN.
 
-usage: python flowcrawl.py [options]
-python flowcrawl.py -u l0r3m1p5umD0lorS1t4m3t.onion
-python flowcrawl.py -v -w -u http://www.github.com -o github.htm
-python flowcrawl.py -v -u l0r3m1p5umD0lorS1t4m3t.onion -c -d 2 -p 5
-python flowcrawl.py -v -w -u http://www.github.com -c -d 2 -p 5 -e -f GitHub
+usage: python flowcrawl/main.py [options]
+python flowcrawl/main.py -u l0r3m1p5umD0lorS1t4m3t.onion
+python flowcrawl/main.py -v -w -u http://www.github.com -o github.htm
+python flowcrawl/main.py -v -u l0r3m1p5umD0lorS1t4m3t.onion -c -d 2 -p 5
+python flowcrawl/main.py -v -w -u http://www.github.com -c -d 2 -p 5 -e -f GitHub
 
 General:
 -h, --help         : Help
@@ -59,6 +59,7 @@ from flowcrawl.checker import check_tor
 from flowcrawl.checker import extract_domain
 from flowcrawl.checker import folder
 from flowcrawl.checker import url_canon
+from flowcrawl.checker import setup_proxy_connection
 # Flow Crawl Modules
 from flowcrawl.crawler import Crawler
 from flowcrawl.extractor import extractor
@@ -74,16 +75,7 @@ def connect_tor(proxy_url, proxy_port):
     :return: None or HTTPError.
     """
     try:
-        # Set socks proxy and wrap the urllib module
-        socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, proxy_url, proxy_port)
-        socket.socket = socks.socksocket
-
-        # Perform DNS resolution through the socket
-        def getaddrinfo(*args):  # noqa
-            return [(socket.AF_INET, socket.SOCK_STREAM, 6, '',
-                     (args[0], args[1]))]
-
-        socket.getaddrinfo = getaddrinfo  # noqa
+        setup_proxy_connection(f"{proxy_url}:{proxy_port}")
     except socks.HTTPError as err:
         error = sys.exc_info()[0]
         print(f"Error: {error} \n## Cannot establish connection with TOR\n"

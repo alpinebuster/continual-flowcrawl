@@ -66,7 +66,7 @@ async def run_cmd(cmd, timeout):
     try:
         stdout, stderr = await asyncio.wait_for(
             proc.communicate(),
-            timeout=timeout
+            timeout=timeout,
         )
     except asyncio.TimeoutError:
         proc.kill()
