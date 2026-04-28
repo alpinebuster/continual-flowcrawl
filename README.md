@@ -98,6 +98,29 @@ This is the most common approach, typically used to hide Tor usage from your Int
 - **Effect:** Your ISP can only see that you are connected to a VPN and cannot detect Tor usage; Tor nodes only see the VPN server’s IP, not your real IP.
 - **Configuration:** Set `HTTPSProxy` or `Socks5Proxy` in Tor’s configuration to point to Clash’s local port.
 
+```markdown
+| Stage   | Traffic Path                               | Monitored Interface | Traffic Characteristics                                             |
+|---------|--------------------------------------------|---------------------|---------------------------------------------------------------------|
+| Stage 1 | Python process -> lo -> Tor container      | lo                  | Original request: plaintext HTTP or standard SOCKS5 handshake       |
+| Stage 2 | Tor container -> br-xxx -> Clash container | br-96c3e5fe6396     | Tor encrypted traffic: data encapsulated into 512-byte Tor cells    |
+| Stage 3 | Clash container -> br-xxx -> external proxy node | br-96c3e5fe6396 | Double-encrypted traffic: Tor traffic further encapsulated by Clash (e.g., SS / Trojan protocols) |
+```
+
+
+```sh
+TOR_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tor)
+CLASH_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' clash)
+# docker network inspect continual-flowcrawl_clashnet
+docker network ls | grep clashnet
+# >>> "96c3e5fe6396 continual-flowcrawl_clashnet   bridge    local"
+
+sudo tcpdump -i lo port 9050 -w stage1_raw.pcap
+# Capture only the traffic between the Tor and Clash containers
+sudo tcpdump -i br-96c3e5fe6396 src host $TOR_IP and dst host $CLASH_IP and dst port 27890 -w stage2_tor.pcap
+# Capture only the outbound traffic from Clash to the external network
+sudo tcpdump -i br-96c3e5fe6396 host $CLASH_IP and not port 27890 and not port 9090 -w stage3_clash.pcap
+```
+
 1. **Install dependencies**:<br>
 `pip install -r requirements.txt` or:
 ```sh
@@ -115,7 +138,7 @@ Start the clash first by running `docker compose --profile clash up -d`.
 
 For advanced usage with bridges, start with the following configuration:
 
-"""txt
+```torrc
 #Use socks5h # Use SOCKS5 proxy and let DNS resolution also be carried out through the proxy (remote resolution)
 #HTTPSProxy 127.0.0.1:27890
 #HTTPSProxyAuthenticator user:password
@@ -135,7 +158,7 @@ Bridge webtunnel [2001:db8:ce90:3593:272e:4975:a031:55b]:443 12382A2F3912AD1983A
 ClientTransportPlugin snowflake exec /usr/bin/snowflake-client
 Bridge snowflake
 Bridge snowflake
-"""
+```
 
 then start tor with this configuration:
 1) Debian/Ubuntu: <br>
