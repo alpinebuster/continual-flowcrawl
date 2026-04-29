@@ -75,7 +75,7 @@ async def run_cmd(cmd, timeout):
             await proc.wait()
         except Exception:
             pass
-        raise
+        raise RuntimeError("Command timed out")
 
     # Print subprocess output
     if stdout:
@@ -101,22 +101,11 @@ async def worker(worker_id, network, queue):
         # Startup jitter
         await asyncio.sleep(random.uniform(0.5, 2.0))
 
-        """
-        mkdir -p /tmp/chrome-profile-bt
-        google-chrome \
-            --user-data-dir=/tmp/chrome-profile-bt \
-            --no-first-run \
-            --no-default-browser-check
-
-        # Mac
-        open -na "Google Chrome" --args \
-            --user-data-dir=/tmp/chrome-profile-bt \
-            --no-first-run \
-            --no-default-browser-check
-        """
+        container_name = f"bt-{worker_id}-{idx}-{int(time.time())}"
         cmd = [
             "docker", "run", "--rm",
             "--network", network,
+            "--name", container_name,
             "-v", f"{output_dir}:/browsertime",
             DOCKER_IMAGE,
             "-n", str(SAMPLES_PER_SITE),
@@ -148,8 +137,20 @@ async def worker(worker_id, network, queue):
                 break
             except asyncio.TimeoutError:
                 print(f"[W{worker_id}][{idx}] TIMEOUT {url}")
+                subprocess.run(
+                    ["docker", "rm", "-f", container_name],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                print(f"[W{worker_id}][{idx}] TIMEOUT {url} -> killed {container_name}")
             except Exception as e:
                 print(f"[W{worker_id}][{idx}] ERROR {url}: {e}")
+                subprocess.run(
+                    ["docker", "rm", "-f", container_name],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                print(f"[W{worker_id}][{idx}] ERROR {url} -> killed {container_name}")
 
         if not success:
             print(f"[W{worker_id}][{idx}] FAILED {url}")

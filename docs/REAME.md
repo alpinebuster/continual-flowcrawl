@@ -1,166 +1,179 @@
-# Doh + ECH
-> SNI（Server Name Indication）只出现在 TLS 的 ClientHello 阶段
+# DoH + ECH
 
-DoH 和 ECH 只做一件事：“让 ClientHello 的真实 SNI 不被网络中间人看到”。
+> SNI (Server Name Indication) only appears in the TLS ClientHello phase
+
+DoH and ECH do just one thing: **prevent the real SNI in ClientHello from being visible to network intermediaries**.
 
 ```txt
-[用户输入域名]
+[User enters domain]
   ↓
-DNS 查询（DoH保护这里）
+DNS query (protected by DoH here)
   ↓
-找到IP
+Resolve IP
   ↓
-TLS连接
+TLS connection
   ↓
-握手（ECH保护这里）
+Handshake (protected by ECH here)
   ↓
-全加密HTTP通信
+Fully encrypted HTTP communication
 ```
 
 ```txt
-可以把 ECH + CDN 理解成：
+You can think of ECH + CDN like this:
 
-你去酒店（源站），但要先经过前台（边缘）
+You go to a hotel (origin server), but must first pass through the front desk (edge)
 
-外层 TLS = 你和前台说话
-内层 TLS = 前台帮你转达你真正要找的房间
+Outer TLS = you talking to the front desk
+Inner TLS = the front desk relaying your request to the actual room
 
-所以：
+So:
 
-外层 cipher suite = 前台能听懂什么语言
-内层 cipher suite = 房间里真正交流的语言
+Outer cipher suite = languages the front desk understands
+Inner cipher suite = language used inside the room
 ```
 
 ## Objective
-- 分类看不见的 SNI
-- Target App Testset (*200+* ECH & *200+* VPN Website) -> Acc. 95+%
-- Non-Target App Testset (*600+* Normal Website) -> FPR <2%
-- Half-year Cycle ECH Dataset -> Acc. 90+%
-- Model Params (<10M)
+
+* Classify invisible SNI
+* Target App Testset (*200+* ECH & *200+* VPN websites) -> Acc. 95+%
+* Non-Target App Testset (*600+* normal websites) -> FPR < 2%
+* Half-year cycle ECH dataset -> Acc. 90+%
+* Model parameters (< 10M)
 
 ## Difficulties
-- A: Doh 导致看不到**查询时候**的 domain
-- B: ECH 导致看不到**访问时候**真实 domain，**ip 和 domain 都指向边缘服务器**，导致针对服务器的加密套件、Extensions套件等的 TLS 指纹（JA4 & JA4S）失效
-- C: 不同 ECH 网站访问的资源类型可能十分相似并且资源类型很多（比如两个网站都是聊天软件）
+
+* A: DoH hides the domain during the **query stage**
+* B: ECH hides the real domain during the **access stage**, and both IP and domain point to edge servers, making TLS fingerprints (JA4 & JA4S) based on server-side features ineffective (cipher suites, extensions, etc.)
+* C: Different ECH websites may have very similar and diverse resource types (e.g., two sites both being chat applications)
 
 ## Roadmap
-> 这个要看华为的泛化测试集是怎么样的，因为我们抓数据是在**客户端**，能拿到一次完整的 ECH 访问事件。而华为的可能是在**网络出口**，这种情况下只能抓到单个 session 的流量
 
-在 ECH 下，`Client → 网络出口 → CDN`, 能看到：
+> This depends on how Huawei’s generalization test set is constructed. Our data is collected at the **client side**, where a full ECH access event can be observed. Huawei’s may be collected at the **network gateway**, where only single-session traffic is visible.
 
-- 目标 IP（通常是 CDN anycast IP）
-- ASN（Cloudflare / Akamai / AWS）
-- 端口（443 / QUIC 443）
-- TLS ClientHello 外层信息（outer CH）
-- QUIC Initial packet（如果是 HTTP/3）
+Under ECH, in `Client → Network Gateway → CDN`, the following is visible:
 
-看不到：
-- 真实 SNI（inner ClientHello）
-- 真实域名
-- HTTP Host
-- URL
+* Destination IP (usually CDN anycast IP)
+* ASN (Cloudflare / Akamai / AWS)
+* Port (443 / QUIC 443)
+* TLS ClientHello outer information (outer CH)
+* QUIC Initial packet (for HTTP/3)
 
-初步可以试验的方法：
+Not visible:
 
-- 先粗粒度检测是 ECH（ASN（Autonomous System Number，自治系统编号） -> IP 归属 CDN（Cloudflare / Fastly / Akamai））
+* Real SNI (inner ClientHello)
+* Real domain
+* HTTP Host
+* URL
 
-- 针对难点A，借用经典 Doh 特征 + 方法
+Preliminary approaches:
 
-- 针对难点B，采用多模态数据，ECH 网站并非全部流量都是全加密，还有大部分流量是非 ECH 的，因此如果能构造多模态数据就可以加上传统流量行为特征。
-- 针对难点B，如果华为的泛化测试集是在**网络出口**抓的只有单个 session 的数据，采用通过客户端级分类拿到多模态数据：即使 ECH，握手仍然暴露：TLS ClientHello fingerprint + QUIC 指纹（JA3 / JA4）
-- 针对难点B，借用客户端级分类来进行 DNS 侧补充（如果没 DoH）
+* Coarse-grained detection of ECH (ASN (Autonomous System Number) → IP belongs to CDN such as Cloudflare / Fastly / Akamai)
 
-- 针对难点C，IP 情报 + CDN 业务映射（半推断），可以做 `Cloudflare IP → 大量网站集合` + `Google IP → YouTube / Search / Gmail`，但这是“服务类型推断”，不是“网站识别”。因此可以作为 mash 信息（参考 etbert 的方法）
-- 针对难点C，直接原始 pcap 字节（netmamba）
+* For difficulty A, reuse classic DoH features and methods
 
-### HAR 能怎么“间接帮助”PCAP？
-HAR 的价值在于用来做“特征设计参考”，HAR 能看到一个网站访问时通常会产生的：
+* For difficulty B, use multimodal data. Not all traffic of ECH-enabled websites is fully encrypted; a significant portion remains non-ECH. If multimodal data can be constructed, traditional traffic behavior features can be incorporated.
 
-- 请求数量（page load complexity）
-- 资源类型比例（JS / CSS / image）
-- 请求顺序结构
-- 域名分布（CDN / API / main domain）
-- 请求时间分布（burst / lazy load）
+* For difficulty B, if Huawei’s dataset is collected at the **network gateway** with only single-session data, use client-side classification to obtain multimodal data. Even with ECH, the handshake still exposes: TLS ClientHello fingerprint + QUIC fingerprint (JA3 / JA4)
 
-👉 然后映射到 PCAP 可以提取的特征：
+* For difficulty B, use client-side classification to supplement DNS-side information (if DoH is not used)
 
-1. 流量节奏特征（timing pattern）-> 来自 HAR 的“请求时间线”
+* For difficulty C, use IP intelligence + CDN service mapping (semi-inference). For example:
+  `Cloudflare IP → large set of websites`
+  `Google IP → YouTube / Search / Gmail`
+  However, this is **service-type inference**, not **website identification**, so it can be used as mash information (similar to etbert’s method)
 
-PCAP可提：
+* For difficulty C, directly use raw PCAP bytes (netmamba)
 
-- packet inter-arrival time
-- flow burst pattern
-- TLS record timing
-- packet size sequence
-- flow duration
-- upstream/downstream ratio/sequence
-- TLS特征（有限, JA4 FP）
+### How can HAR “indirectly help” PCAP?
 
-2. 流量大小结构（size signature）
+The value of HAR is to serve as a **reference for feature design**. HAR reveals what typically happens during a website visit:
 
-HAR启发：
+* Number of requests (page load complexity)
+* Resource type ratio (JS / CSS / image)
+* Request order structure
+* Domain distribution (CDN / API / main domain)
+* Request timing distribution (burst / lazy load)
 
-图片多 → 大响应
-API多 → 小 JSON
+👉 Then map these to features extractable from PCAP:
 
-PCAP可提：
+1. Traffic timing patterns (from HAR request timeline)
 
-- packet size distribution
-- flow byte histogram
-- upstream/downstream ratio
+PCAP can extract:
 
-3. 连接结构（flow graph）
+* Packet inter-arrival time
+* Flow burst patterns
+* TLS record timing
+* Packet size sequence
+* Flow duration
+* Upstream/downstream ratio and sequence
+* TLS features (limited, JA4 fingerprint)
 
-HAR启发：
+2. Traffic size structure (size signature)
 
-一个页面会请求多少域名
+HAR insight:
 
-PCAP可提：
+* Image-heavy → large responses
+* API-heavy → small JSON responses
 
-- destination IP count
-- TLS session count
+PCAP can extract:
 
-4. CDN / 服务指纹（弱化版）
+* Packet size distribution
+* Flow byte histogram
+* Upstream/downstream ratio
 
-HAR能看到：
+3. Connection structure (flow graph)
 
-api.xxx.com
-cdn.xxx.net
+HAR insight:
 
-PCAP只能看到：
+* How many domains a page requests
 
-IP ASN（Autonomous System Number (ASN)）
-  - ASN / IP range
-  - connection fan-out
-连接到 Cloudflare / AWS / Google
+PCAP can extract:
 
-5. 在 ECH 场景下的现实问题
+* Destination IP count
+* TLS session count
 
-当 ECH 开启后：
+4. CDN / service fingerprint (weakened version)
 
-❌ SNI 不能用于分类
-❌ 域名消失
-❌ HAR 的“网站结构信息”完全不可见
+HAR shows:
 
-所以：
+* api.xxx.com
+* cdn.xxx.net
 
-👉 分类必须依赖 流量行为特征（traffic fingerprinting）
+PCAP only sees:
+
+* IP ASN (Autonomous System Number)
+
+  * ASN / IP range
+  * Connection fan-out
+    Connections to Cloudflare / AWS / Google
+
+5. Real challenges under ECH
+
+When ECH is enabled:
+
+❌ SNI cannot be used for classification
+❌ Domain names disappear
+❌ HAR’s “site structure information” becomes invisible
+
+Therefore:
+
+👉 Classification must rely on **traffic behavior fingerprinting**
 
 ```txt
-Step 1：PCAP → Flow 化
-  五元组flow（src/dst IP, src/dst port, protocol）
+Step 1: PCAP → Flow conversion
+  Five-tuple flow (src/dst IP, src/dst port, protocol)
 
-Step 2：提特征（核心）
-  - 流量行为特征
-  - TLS特征（有限）
-  - 网络拓扑
+Step 2: Feature extraction (core)
+  - Traffic behavior features
+  - TLS features (limited)
+  - Network topology
 
-Step 3：HAR 用在哪里？
-  HAR只用于：
+Step 3: Where is HAR used?
+  HAR is only used for:
 
-  ✔ 训练标签理解 -> 知道“某网站访问结构长什么样”
-  ✔ 特征启发 -> 帮你设计 flow pattern features
-  ✔ 数据对齐（非常重要）
-      HAR → 标注 ground truth
+  ✔ Training label understanding → know what a site's access pattern looks like
+  ✔ Feature inspiration → help design flow pattern features
+  ✔ Data alignment (very important)
+      HAR → ground truth labeling
       PCAP → feature extraction
 ```

@@ -1,38 +1,43 @@
 # ECH (Encrypted Client Hello)
-> Ech checker: `https://tls-ech.dev/`.
 
-把“你要访问哪个网站”这件事也加密起来。
+> ECH checker: `https://tls-ech.dev/`.
+
+Encrypts **which website you’re trying to visit**.
 
 ## How it works?
-在没有 ECH 的 HTTPS 里，即使是加密连接，网络设备仍然能看到：你访问的是哪个域名（比如 example.com），因为在 TLS 握手阶段，有个字段叫：SNI（Server Name Indication），它是明文的。
+
+In HTTPS without ECH, even though the connection is encrypted, network devices can still see which domain you’re visiting (for example, example.com). This is because during the TLS handshake there is a field called **SNI (Server Name Indication)**, and it is sent in plaintext.
 
 ---
 
-ECH 的作用就是把 TLS 握手里的 ClientHello 进行加密，重点加密：SNI（最重要）+ 一些辅助信息。
+The purpose of ECH is to encrypt the **ClientHello** in the TLS handshake, especially:
+SNI (most important) + some auxiliary information.
 
-这样中间设备只能看到连接了一台服务器（但不知道具体域名）--> 真实访问的网站被隐藏了
+As a result, intermediaries can only see that you connected to a server (but not the specific domain) → the actual destination website is hidden.
 
 ```txt
-浏览器：
-  先拿到“加密用的公钥”（从 DNS 或 HTTPS DNS）
+Browser:
+  First obtains the "public key for encryption" (from DNS or HTTPS DNS)
 
-然后：
+Then:
 
-ClientHello（里面的 SNI 被加密）
-  ├── Outer SNI（明文，可见）
-  │     通常是 CDN / 边缘服务器域名
-  └── Inner SNI（被 ECH 加密）
-        真实访问的网站（example.com）
+ClientHello (SNI inside is encrypted)
+  ├── Outer SNI (plaintext, visible)
+  │     Usually a CDN / edge server domain
+  └── Inner SNI (encrypted with ECH)
+        The real destination website (example.com)
         ↓
-client-facing server（入口服务器）
+client-facing server (entry server)
         ↓
-解密 SNI → 转发到正确网站
+Decrypts SNI → forwards to the correct website
 ```
 
 ## Websites that have already enabled ECH
-ECH enabled sites: https://divested.dev/misc/ech.txt
+
+ECH enabled sites: [https://divested.dev/misc/ech.txt](https://divested.dev/misc/ech.txt)
 
 e.g.
+
 ```txt
 https://123moviesfree.net
 https://1377x.to
@@ -48,7 +53,8 @@ https://suksesbogil.com
 ```
 
 ## What is Client-Facing Server?
-> Edge server（边缘服务器）, Front-end proxy（前置代理）, Gateway（网关）, Reverse proxy（反向代理）, CDN edge node
+
+> Edge server, Front-end proxy, Gateway, Reverse proxy, CDN edge node
 
 ECH is usually decrypted on the client-facing server.
 
@@ -57,7 +63,7 @@ Browser
   ↓
 Cloudflare / Nginx / Edge Server  <-- (client-facing)
   ↓
-Web Server（API）
+Web Server (API)
   ↓
 Target Data
 ```

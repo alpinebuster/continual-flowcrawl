@@ -1,29 +1,31 @@
-# Doh (Domain over https)
-用 HTTPS 加密 DNS 查询，防止别人看到你在解析什么域名。
+# DoH (Domain over HTTPS)
+
+Encrypt DNS queries using HTTPS to prevent others from seeing which domains you’re resolving.
 
 ## How it works?
-你访问网站时，比如：example.com，浏览器需要先问 DNS：“这个域名对应哪个 IP？”。传统流程是：
+
+When you visit a website, for example: example.com, your browser first needs to ask DNS: “Which IP address corresponds to this domain?” The traditional process is:
 
 ```txt
-你 → DNS 服务器：example.com 是什么 IP？
-（明文）
-DNS → 你：93.184.216.34
+You → DNS server: What is the IP for example.com?
+(plaintext)
+DNS → You: 93.184.216.34
 ```
 
-问题：任何网络中间人都能看到你查了什么域名。
+Problem: Any intermediary on the network can see which domains you are querying.
 
 ---
 
-DoH 把 DNS 请求塞进 HTTPS：
+DoH wraps DNS requests inside HTTPS:
 
 ```txt
-浏览器
+Browser
   ↓
-HTTPS 请求（加密）
+HTTPS request (encrypted)
   ↓
-DNS over HTTPS 服务器
+DNS over HTTPS server
   ↓
-返回 IP（仍然加密）
+Returns IP (still encrypted)
 ```
 
-外部只能看到你连了某个 HTTPS 服务器，但看不到你查的域名。
+Outsiders can only see that you connected to an HTTPS server, but cannot see which domain you queried.

@@ -6,7 +6,7 @@
 
 <div align="center">
   <img width="50%" alt="Logo" src=".github/continual-flowcrawl.svg">
-  <a href="https://spec.torproject.org/"><img src="https://raw.githubusercontent.com/alpinebuster/continual-flowcrawl/main/.github/tor_logo.png" title="Tor Logo" style="max-width:100%;" width="256" /></a>
+  <a href="https://spec.torproject.org/"><img src=".github/tor_logo.png" title="Tor Logo" style="max-width:100%;" width="256" /></a>
 
   # Continual Flow Crawl
   <p>It combines ease of use with the robust privacy features of ECH/Tor/VPN, allowing for secure and untraceable data collection.</p>
@@ -98,13 +98,12 @@ This is the most common approach, typically used to hide Tor usage from your Int
 - **Effect:** Your ISP can only see that you are connected to a VPN and cannot detect Tor usage; Tor nodes only see the VPN server’s IP, not your real IP.
 - **Configuration:** Set `HTTPSProxy` or `Socks5Proxy` in Tor’s configuration to point to Clash’s local port.
 
-```markdown
+
 | Stage   | Traffic Path                               | Monitored Interface | Traffic Characteristics                                             |
 |---------|--------------------------------------------|---------------------|---------------------------------------------------------------------|
 | Stage 1 | Python process -> lo -> Tor container      | lo                  | Original request: plaintext HTTP or standard SOCKS5 handshake       |
 | Stage 2 | Tor container -> br-xxx -> Clash container | br-96c3e5fe6396     | Tor encrypted traffic: data encapsulated into 512-byte Tor cells    |
 | Stage 3 | Clash container -> br-xxx -> external proxy node | br-96c3e5fe6396 | Double-encrypted traffic: Tor traffic further encapsulated by Clash (e.g., SS / Trojan protocols) |
-```
 
 
 ```sh

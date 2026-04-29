@@ -65,7 +65,7 @@ from flowcrawl.extractor import extractor
 from flowcrawl.export import export_json, export_xml, export_database
 from flowcrawl.visualization import export_visualization
 
-__version__ = "1.0.9"
+__version__ = "1.0.11"
 
 
 def connect_tor(proxy_url, proxy_port):

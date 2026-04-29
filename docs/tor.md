@@ -1,58 +1,62 @@
 # Tor (The Onion Router)
-通过多层加密“接力转发”，让别人很难知道你是谁、你在访问什么网站。
+
+Uses layered encryption and relay forwarding to make it difficult for others to know who you are and what websites you are accessing.
 
 ## How it works?
-在普通上网中：
+
+In normal web access:
 
 ```txt
-你 → 网站
+You → Website
 ```
 
-问题是：
+The problems are:
 
-ISP 能看到你访问的网站
-网站能看到你的 IP
-网络中间人可以分析流量
+* Your ISP can see which websites you visit
+* The website can see your IP address
+* Network intermediaries can analyze your traffic
 
 ---
 
-Tor 的核心是洋葱路由（Onion Routing）
+The core of Tor is **Onion Routing**
 
-意思是：数据像洋葱一样一层一层加密。
+This means data is encrypted in layers, like an onion.
 
-它的工作流程：
+Its workflow:
 
 ```txt
-你
+You
  ↓
-入口节点（Guard Node）
+Entry Node (Guard Node)
  ↓
-中继节点（Relay Node）
+Relay Node
  ↓
-出口节点（Exit Node）
+Exit Node
  ↓
-目标网站
+Target Website
 ```
 
-每一跳只知道“上一跳和下一跳”，不知道完整路径，因此能隐藏：
+Each hop only knows the “previous hop” and the “next hop,” but not the full path. This helps hide:
 
-你的真实 IP
-你的地理位置
-访问网站的来源
+* Your real IP
+* Your geographic location
+* The origin of the request
 
 ---
 
-Tor 和 VPN 的区别
+## Difference between Tor and VPN
 
-VPN：
+VPN:
+
 ```txt
-你 → VPN → 网站
+You → VPN → Website
 ```
 
-VPN 公司知道你是谁
+The VPN provider knows who you are.
 
-Tor：
+Tor:
+
 ```txt
-多个节点分散
-没有单点知道完整路径
+Multiple distributed nodes
+No single point knows the full path
 ```

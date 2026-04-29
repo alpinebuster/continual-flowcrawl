@@ -1,44 +1,48 @@
 # Traditional network access methods
-DNS 明文 + TCP/HTTP(TLS) 传输 + 中间网络可观察部分元数据
+
+Plaintext DNS + TCP/HTTP (TLS) transport + partially observable metadata in the network
 
 ```txt
 ┌────────────────────────────┐
-│         浏览器输入URL       │
+│     Browser enters URL     │
 │     https://example.com    │
 └─────────────┬──────────────┘
               │
               ▼
 ┌────────────────────────────┐
-│        1️⃣ DNS 查询          │
-│    example.com → IP地址     │
-│    例如：93.184.216.34      │
+│        1. DNS Query        │
+│    example.com → IP address│
+│    e.g.: 93.184.216.34     │
 └─────────────┬──────────────┘
               │
               ▼
 ┌────────────────────────────┐
-│     2️⃣ TCP 建立连接         │
-│     三次握手（SYN / ACK）    │
-│     建立可靠通信通道          │
+│      2. TCP Connection     │
+│     Three-way handshake    │
+│     (SYN / ACK)            │
+│     Establishes reliable   │
+│     communication channel  │
 └─────────────┬──────────────┘
               │
               ▼
 ┌────────────────────────────┐
-│     3️⃣ TLS 握手（HTTPS）    │
-│      - 协商加密密钥          │
-│      - 验证网站证书          │
-│    ⚠️ SNI（域名）可能明文     │
+│   3. TLS Handshake (HTTPS) │
+│      - Negotiate keys      │
+│      - Verify certificate  │
+│    ⚠️ SNI (domain) may be  │
+│       plaintext            │
 └─────────────┬──────────────┘
               │
               ▼
 ┌────────────────────────────┐
-│     4️⃣ HTTP 请求/响应       │
-│   浏览器 → GET /index.html  │
-│   服务器 → HTML / CSS / JS  │
+│     4. HTTP Request/Resp   │
+│   Browser → GET /index.html│
+│   Server → HTML / CSS / JS │
 └─────────────┬──────────────┘
               │
               ▼
 ┌────────────────────────────┐
-│      🌍 返回网页内容         │
-│      页面渲染完成            │
+│      🌍 Webpage returned   │
+│      Page fully rendered   │
 └────────────────────────────┘
 ```

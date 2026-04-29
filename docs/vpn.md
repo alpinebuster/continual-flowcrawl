@@ -1,22 +1,25 @@
 # VPN (Virtual Private Network)
-把你的所有网络流量先加密送到一台“中转服务器”，再由它帮你访问互联网。
+
+Encrypts all your network traffic and sends it to an intermediary server, which then accesses the internet on your behalf.
 
 ## How it works?
-正常上网：
+
+Normal web access:
 
 ```txt
-你 → 网站
+You → Website
 ```
 
 ---
 
-使用 VPN 后：
+After using a VPN:
 
 ```txt
-你 → 加密隧道 → VPN服务器 → 网站
+You → Encrypted Tunnel → VPN Server → Website
 ```
 
-这样：
-- 你到 VPN 服务器之间的流量是加密的，ISP（运营商）看不到你具体访问内容
-- 隐藏你的真实 IP，网站看到的是 VPN 服务器的 IP，不是你的真实 IP
-- 改变“出口位置”，你在中国 → 连接美国 VPN，网站会以为你在美国
+As a result:
+
+* The traffic between you and the VPN server is encrypted, so your ISP cannot see the specific content you access
+* Your real IP address is hidden; websites see the VPN server’s IP instead of yours
+* Your apparent “exit location” changes. For example, if you are in China but connect to a U.S. VPN, websites will think you are in the United States
