@@ -87,6 +87,32 @@ Check `encrypted_client_hello` filed in the `chromeNetlog-*.json`, you will see 
 {"params":{"cipher_suite":4865,"encrypted_client_hello":true,"is_resumed":false,"key_exchange_group":4588,"next_proto":"h2","peer_signature_algorithm":1027,"version":"TLS 1.3"},"phase":2,"source":{"id":90,"start_time":"332374709","type":9},"time":"332374921","type":61},
 ```
 
+Manual flow crawl to bypass human checking:
+
+1) On macos
+```sh
+open -na "Google Chrome" --args \
+  --user-data-dir=/tmp/chrome-profile-bt \
+  --no-first-run \
+  --no-default-browser-check \
+  --auto-open-devtools-for-tabs \
+  --start-maximized \
+  --enable-features=EncryptedClientHello \
+  --use-dns-https-alpn \
+  --force-dns-over-https=https://cloudflare-dns.com/dns-query \
+  --disable-async-dns \
+  --enable-logging=stderr \
+  --v=1 \
+  --disable-background-networking \
+  --disable-component-update \
+  --disable-sync \
+  --disable-default-apps \
+  --disable-domain-reliability \
+  --disable-extensions \
+  --log-net-log=/tmp/netlog.json \
+  https://content.iospress.com
+```
+
 <hr>
 
 ## FlowCrawl

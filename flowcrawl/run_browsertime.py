@@ -108,8 +108,12 @@ async def worker(worker_id, network, queue):
             "--name", container_name,
             "-v", f"{output_dir}:/browsertime",
             DOCKER_IMAGE,
+
             "-n", str(SAMPLES_PER_SITE),
             "--video", "--tcpdump", "--visualMetrics",
+            # Wait up to 10 seconds for elements
+            # "--timeouts.elementWait", "10000",
+
             "--browser", "chrome",
             "--chrome.args", "enable-features=EncryptedClientHello",
             "--chrome.args", "use-dns-https-alpn",
