@@ -113,6 +113,10 @@ open -na "Google Chrome" --args \
   https://content.iospress.com
 ```
 
+### Human verification
+
+See more detailed information in [CAPTCHA](./docs/flow/zh/CAPTCHA.md).
+
 <hr>
 
 ## FlowCrawl
