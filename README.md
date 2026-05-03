@@ -145,9 +145,17 @@ docker network ls | grep clashnet
 
 sudo tcpdump -i lo port 9050 -w stage1_raw.pcap
 # Capture only the traffic between the Tor and Clash containers
-sudo tcpdump -i br-96c3e5fe6396 src host $TOR_IP and dst host $CLASH_IP and dst port 27890 -w stage2_tor.pcap
-# Capture only the outbound traffic from Clash to the external network
-sudo tcpdump -i br-96c3e5fe6396 host $CLASH_IP and not port 27890 and not port 9090 -w stage3_clash.pcap
+sudo tcpdump -i br-96c3e5fe6396 host $TOR_IP and host $CLASH_IP and port 27890 -w stage2_tor.pcap
+
+# Capture only the traffic between Clash and the external network
+docker network inspect continual-flowcrawl_clashnet
+# "Subnets": {
+#     "10.200.90.0/24": {
+#         "IPsInUse": 6,
+#         "DynamicIPsAvailable": 250
+#     }
+# }
+sudo tcpdump -i br-96c3e5fe6396 host $CLASH_IP and not net 10.200.90.0/24 -w stage3_clash.pcap
 ```
 
 1. **Install dependencies**:<br>
