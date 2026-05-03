@@ -1,14 +1,14 @@
 mixed-port: 27890
 allow-lan: true
 bind-address: 0.0.0.0
-mode: global # rule, direct
+mode: global # global, rule, direct
 log-level: debug
 external-controller: 0.0.0.0:9090
 dns:
     enable: true
     ipv6: false
     default-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
-    enhanced-mode: fake-ip
+    enhanced-mode: redir-host # fake-ip
     fake-ip-range: 198.18.0.1/16
     use-hosts: true
     respect-rules: true

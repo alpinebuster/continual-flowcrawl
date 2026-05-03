@@ -184,17 +184,13 @@ Socks5Proxy 127.0.0.1:27890
 
 UseBridges 1
 
-ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed
+ClientTransportPlugin obfs4 exec /usr/bin/lyrebird managed
 Bridge obfs4 51.79.30.226:35077 6D0268328156594C41B50BF94EBD7CDCFAF985E2 cert=wQ35o1bPKT8CFmg/5C4eKmRMt4O+q6pBuflVe3vscbGS12bb4vwC5BnYepnNf0vgdDrnYQ iat-mode=0
 Bridge obfs4 146.59.116.226:50845 DA91DE63966E03676A9994BDB7A18D1DCE2FAF10 cert=IAur+EwfAIbdC8jy+Mi9xlmh5ouL577Ya6ygJBEChWS8lNiEfy3hU/IAvDZ5Ntw/w2Oidg iat-mode=0
 
 ClientTransportPlugin webtunnel exec /usr/bin/webtunnel
 Bridge webtunnel [2001:db8:f765:be98:4d81:b8cb:fadc:2bc6]:443 58A23BB757C3FDDBAA0E3CA5E631B7225A87F852 url=https://redlib.005184.xyz/wlDwrKzwL3J43jiDCjT0Mb0z ver=0.0.3
 Bridge webtunnel [2001:db8:ce90:3593:272e:4975:a031:55b]:443 12382A2F3912AD1983A97C8709CBAE47ADB60BE3 url=https://miranda.today/LWwxIXDHCyyScn7oDauPMTmX ver=0.0.3
-
-ClientTransportPlugin snowflake exec /usr/bin/snowflake-client
-Bridge snowflake
-Bridge snowflake
 ```
 
 then start tor with this configuration:
@@ -212,7 +208,7 @@ then start tor with this configuration:
 More detailed script on linux:
 
 ```sh
-sudo apt install tor obfs4proxy
+sudo apt install tor lyrebird
 sudo apt install snowflake-client -y
 
 sudo vi /etc/tor/torrc

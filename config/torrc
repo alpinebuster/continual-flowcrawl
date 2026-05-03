@@ -197,11 +197,12 @@ SocksPort 9050 # Default: Bind to localhost:9050 for local connections.
 Socks5Proxy clash:27890
 
 
-#UseBridges 0
+#UseBridges 1
 
-#ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed
-#Bridge obfs4 51.79.30.226:35077 6D0268328156594C41B50BF94EBD7CDCFAF985E2 cert=wQ35o1bPKT8CFmg/5C4eKmRMt4O+q6pBuflVe3vscbGS12bb4vwC5BnYepnNf0vgdDrnYQ iat-mode=0
-#Bridge obfs4 146.59.116.226:50845 DA91DE63966E03676A9994BDB7A18D1DCE2FAF10 cert=IAur+EwfAIbdC8jy+Mi9xlmh5ouL577Ya6ygJBEChWS8lNiEfy3hU/IAvDZ5Ntw/w2Oidg iat-mode=0
+# IAT (Inter-Arrival Time)
+#ClientTransportPlugin obfs4 exec /usr/bin/lyrebird managed
+#Bridge obfs4 95.217.11.29:22134 9859875C752128125D3179F90BA6351744B09040 cert=W+qSHr6JcFY6UyJiXR3Ec5I5bYHFwDAXNq8HRQU3C56h/aJB8PQqbr8Sq04zKvhEWGbxEw iat-mode=0
+#Bridge obfs4 162.55.184.210:29299 122E4025415F19FBD991DFA1B45ACA8A19111D2D cert=bwCGiLb7NnlIC5BbPtEQU2lq73eMtlJbuHY5XHjLkb+yMKiX3hI4N06+qCImamam74FgTQ iat-mode=0
 
 #ClientTransportPlugin webtunnel exec /usr/bin/webtunnel
 #Bridge webtunnel [2001:db8:f765:be98:4d81:b8cb:fadc:2bc6]:443 58A23BB757C3FDDBAA0E3CA5E631B7225A87F852 url=https://redlib.005184.xyz/wlDwrKzwL3J43jiDCjT0Mb0z ver=0.0.3
