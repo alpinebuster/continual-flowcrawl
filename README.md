@@ -137,15 +137,18 @@ This is the most common approach, typically used to hide Tor usage from your Int
 
 
 ```sh
+curl -x socks5h://127.0.0.1:9050 'https://check.torproject.org/api/ip'
 TOR_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tor)
 CLASH_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' clash)
 # docker network inspect continual-flowcrawl_clashnet
 docker network ls | grep clashnet
 # >>> "96c3e5fe6396 continual-flowcrawl_clashnet   bridge    local"
 
-sudo tcpdump -i lo port 9050 -w stage1_raw.pcap
+sudo ss -ltnp | grep 9050
+sudo tcpdump -i any tcp port 9050 -nn -s 0 -w stage1_raw.pcap
+
 # Capture only the traffic between the Tor and Clash containers
-sudo tcpdump -i br-96c3e5fe6396 host $TOR_IP and host $CLASH_IP and port 27890 -w stage2_tor.pcap
+sudo tcpdump -i br-96c3e5fe6396 host $TOR_IP and host $CLASH_IP -nn -s 0 -w stage2_tor.pcap
 
 # Capture only the traffic between Clash and the external network
 docker network inspect continual-flowcrawl_clashnet
@@ -155,7 +158,7 @@ docker network inspect continual-flowcrawl_clashnet
 #         "DynamicIPsAvailable": 250
 #     }
 # }
-sudo tcpdump -i br-96c3e5fe6396 host $CLASH_IP and not net 10.200.90.0/24 -w stage3_clash.pcap
+sudo tcpdump -i br-96c3e5fe6396 host $CLASH_IP and not net 10.200.90.0/24 -nn -s 0 -w stage3_clash.pcap
 ```
 
 1. **Install dependencies**:<br>

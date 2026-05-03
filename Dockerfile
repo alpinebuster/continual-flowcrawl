@@ -10,6 +10,7 @@ RUN set -eu && \
     tor \
     bash \
     nyx \
+    tcpdump \
     lyrebird && \
     rm -rf /tmp/* /var/cache/apk/* && \
     sed "1s/^/SocksPort 0.0.0.0:9050\n/" /etc/tor/torrc.sample > /etc/tor/torrc

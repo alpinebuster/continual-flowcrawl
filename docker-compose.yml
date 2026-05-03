@@ -82,5 +82,9 @@ services:
       - '9051:9051'
     volumes:
       - ./config:/etc/tor
+      - ./data:/tmp
     networks:
       - clashnet
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
