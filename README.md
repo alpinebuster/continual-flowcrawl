@@ -138,6 +138,7 @@ This is the most common approach, typically used to hide Tor usage from your Int
 
 ```sh
 curl -x socks5h://127.0.0.1:9050 'https://check.torproject.org/api/ip'
+
 TOR_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tor)
 CLASH_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' clash)
 # docker network inspect continual-flowcrawl_clashnet
