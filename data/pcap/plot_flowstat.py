@@ -1,4 +1,4 @@
-#%%
+# %%
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -71,7 +71,7 @@ X.columns = X.columns.str.replace('/', '_per_')
 numeric_cols = X.select_dtypes(include=[np.number]).columns
 X[numeric_cols] = np.log1p(X[numeric_cols])
 
-#%%
+# %%
 labels = df_all["stage"]
 X = df_all.select_dtypes(include=[np.number])
 X = X.drop(columns=["batch", "src_port", "dst_port", "protocol"], errors="ignore")
@@ -119,4 +119,5 @@ plt.title("t-SNE: Flow Distribution by Stage")
 plt.xlabel("Dim 1")
 plt.ylabel("Dim 2")
 plt.show()
+
 # %%
