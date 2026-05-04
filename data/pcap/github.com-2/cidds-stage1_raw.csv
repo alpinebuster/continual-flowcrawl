@@ -1,0 +1,2 @@
+Src IP,Src Port,Dst IP,Dst Port,Proto,Date first seen,Duration,Bytes,Packets,Flags
+10.200.2.1,33790,10.200.2.4,9050,TCP,2026-05-04 09:41:34.519903 UTC,39309,608696,442,.APRSF

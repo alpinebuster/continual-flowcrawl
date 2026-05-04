@@ -1,0 +1,2 @@
+flow_id,source_ip,source_port,destination_ip,destination_port,protocol,first_timestamp,last_timestamp,duration,flow_expire_cause
+10.200.2.1:49046-10.200.2.4:9050-6,10.200.2.1,49046,10.200.2.4,9050,6,2026-05-04 09:50:43.299228 UTC,2026-05-04 09:50:44.877559 UTC,1578331,TCP Normal Termination

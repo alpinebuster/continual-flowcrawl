@@ -146,7 +146,7 @@ docker network ls | grep clashnet
 # >>> "96c3e5fe6396 continual-flowcrawl_clashnet   bridge    local"
 
 sudo ss -ltnp | grep 9050
-sudo tcpdump -i any tcp port 9050 -nn -s 0 -w stage1_raw.pcap
+sudo tcpdump -i br-96c3e5fe6396 tcp port 9050 and host $TOR_IP and not host $CLASH_IP -nn -s 0 -w stage1_raw.pcap
 
 # Capture only the traffic between the Tor and Clash containers
 sudo tcpdump -i br-96c3e5fe6396 host $TOR_IP and host $CLASH_IP -nn -s 0 -w stage2_tor.pcap

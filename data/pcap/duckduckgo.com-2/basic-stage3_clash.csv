@@ -1,0 +1,2 @@
+flow_id,source_ip,source_port,destination_ip,destination_port,protocol,first_timestamp,last_timestamp,duration,flow_expire_cause
+120.226.75.157:20003-10.200.2.3:42970-6,120.226.75.157,20003,10.200.2.3,42970,6,2026-05-04 09:44:06.379463 UTC,2026-05-04 09:44:23.845846 UTC,17466383,None

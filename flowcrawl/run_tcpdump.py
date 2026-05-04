@@ -84,8 +84,10 @@ def main(output_dir):
 
     cmd1 = [
         "sudo", "tcpdump",
-        "-i", "any",
+        "-i", BRIDGE,
         "tcp", "port", "9050",
+        "and", "host", TOR_IP,
+        "and", "not", "host", CLASH_IP,
         "-nn", "-s", "0",
         "-w", os.path.join(output_dir, "stage1_raw.pcap"),
     ]
