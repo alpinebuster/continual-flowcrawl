@@ -1,21 +1,25 @@
 # %%
 import ast
+from itertools import zip_longest
 
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 def parse_seq(col):
     return col.apply(ast.literal_eval)
 
+
+WEBSITE = "github.com"
 FE_TYPE = "darkflow"
 files_stage1 = [
-    f"google.com-1/{FE_TYPE}-stage1_raw.csv",
-    f"google.com-2/{FE_TYPE}-stage1_raw.csv",
-    f"google.com-3/{FE_TYPE}-stage1_raw.csv"
+    f"{WEBSITE}-1/{FE_TYPE}-stage1_raw.csv",
+    f"{WEBSITE}-2/{FE_TYPE}-stage1_raw.csv",
+    f"{WEBSITE}-3/{FE_TYPE}-stage1_raw.csv"
 ]
 dfs_stage1 = []
 for i, f in enumerate(files_stage1, 1):
@@ -27,9 +31,9 @@ df_stage1 = pd.concat(dfs_stage1, ignore_index=True)
 
 
 files_stage2 = [
-    f"google.com-1/{FE_TYPE}-stage2_tor.csv",
-    f"google.com-2/{FE_TYPE}-stage2_tor.csv",
-    f"google.com-3/{FE_TYPE}-stage2_tor.csv"
+    f"{WEBSITE}-1/{FE_TYPE}-stage2_tor.csv",
+    f"{WEBSITE}-2/{FE_TYPE}-stage2_tor.csv",
+    f"{WEBSITE}-3/{FE_TYPE}-stage2_tor.csv"
 ]
 dfs_stage2 = []
 for i, f in enumerate(files_stage2, 1):
@@ -40,9 +44,9 @@ for i, f in enumerate(files_stage2, 1):
 df_stage2 = pd.concat(dfs_stage2, ignore_index=True)
 
 files_stage3 = [
-    f"google.com-1/{FE_TYPE}-stage3_clash.csv",
-    f"google.com-2/{FE_TYPE}-stage3_clash.csv",
-    f"google.com-3/{FE_TYPE}-stage3_clash.csv"
+    f"{WEBSITE}-1/{FE_TYPE}-stage3_clash.csv",
+    f"{WEBSITE}-2/{FE_TYPE}-stage3_clash.csv",
+    f"{WEBSITE}-3/{FE_TYPE}-stage3_clash.csv"
 ]
 dfs_stage3 = []
 for i, f in enumerate(files_stage3, 1):
@@ -114,11 +118,9 @@ for i in range(5):
 plt.title("Packet Length Overlay")
 plt.show()
 
-# %%
-from itertools import zip_longest
-import numpy as np
-import seaborn as sns
 
+# %%
+# MARK
 def pad_sequences(seqs, max_len=100):
     padded = [
         list(seq[:max_len]) + [0]*(max_len-len(seq))
@@ -136,10 +138,8 @@ plt.xlabel("Packet Index")
 plt.ylabel("Flow")
 plt.show()
 
-# %%
-import seaborn as sns
-import matplotlib.pyplot as plt
 
+# %%
 for stage in df_all["stage"].unique():
     df_stage = df_all[df_all["stage"] == stage]
 
@@ -177,7 +177,7 @@ def combine_dir_len(row):
 
 df_all["signed_len_seq"] = df_all.apply(combine_dir_len, axis=1)
 
-row = df_all.iloc[0]
+row = df_all.iloc[8]
 
 plt.figure(figsize=(10,3))
 plt.plot(row["signed_len_seq"])

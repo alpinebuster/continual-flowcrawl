@@ -66,5 +66,3 @@ venv.bak/
 *.tar.gz
 doh_ech
 book
-*.pcap
-*.pcapng

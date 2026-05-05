@@ -1,3 +1,3 @@
-flow_id,source_ip,source_port,destination_ip,destination_port,protocol,first_timestamp,last_timestamp,duration,flow_expire_cause
-10.200.2.3:36406-120.226.75.154:20003-6,10.200.2.3,36406,120.226.75.154,20003,6,2026-05-04 09:39:07.831360 UTC,2026-05-04 09:39:09.909567 UTC,2078207,None
-10.200.2.3:42970-120.226.75.157:20003-6,10.200.2.3,42970,120.226.75.157,20003,6,2026-05-04 09:39:03.697712 UTC,2026-05-04 09:39:11.877034 UTC,8179322,None
+version https://git-lfs.github.com/spec/v1
+oid sha256:7bc86279c90e02ad76b7daa9d28ba6f4ca52ee425cd22534b5c4064497c1ba67
+size 439

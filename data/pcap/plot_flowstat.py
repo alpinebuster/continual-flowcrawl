@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 
 
@@ -93,8 +94,6 @@ plt.title("PCA by Stage")
 plt.show()
 
 # %%
-from sklearn.manifold import TSNE
-
 tsne = TSNE(
     n_components=2,
     perplexity=5,
