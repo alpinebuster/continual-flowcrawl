@@ -8,11 +8,12 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 
 
+WEBSITE = "google.com"
 FE_TYPE = "nfstream"
 files_stage1 = [
-    f"google.com-1/{FE_TYPE}-stage1_raw.csv",
-    f"google.com-2/{FE_TYPE}-stage1_raw.csv",
-    f"google.com-3/{FE_TYPE}-stage1_raw.csv"
+    f"{WEBSITE}-1/{FE_TYPE}-stage1_raw.csv",
+    f"{WEBSITE}-2/{FE_TYPE}-stage1_raw.csv",
+    f"{WEBSITE}-3/{FE_TYPE}-stage1_raw.csv"
 ]
 dfs_stage1 = []
 for i, f in enumerate(files_stage1, 1):
@@ -24,9 +25,9 @@ df_stage1 = pd.concat(dfs_stage1, ignore_index=True)
 
 
 files_stage2 = [
-    f"google.com-1/{FE_TYPE}-stage2_clash.csv",
-    f"google.com-2/{FE_TYPE}-stage2_clash.csv",
-    f"google.com-3/{FE_TYPE}-stage2_clash.csv"
+    f"{WEBSITE}-1/{FE_TYPE}-stage2_tor.csv",
+    f"{WEBSITE}-2/{FE_TYPE}-stage2_tor.csv",
+    f"{WEBSITE}-3/{FE_TYPE}-stage2_tor.csv"
 ]
 dfs_stage2 = []
 for i, f in enumerate(files_stage2, 1):
@@ -36,8 +37,21 @@ for i, f in enumerate(files_stage2, 1):
     dfs_stage2.append(df)
 df_stage2 = pd.concat(dfs_stage2, ignore_index=True)
 
+files_stage3 = [
+    f"{WEBSITE}-1/{FE_TYPE}-stage3_clash.csv",
+    f"{WEBSITE}-2/{FE_TYPE}-stage3_clash.csv",
+    f"{WEBSITE}-3/{FE_TYPE}-stage3_clash.csv"
+]
+dfs_stage3 = []
+for i, f in enumerate(files_stage3, 1):
+    df = pd.read_csv(f)
+    df["batch"] = i
+    df["stage"] = "stage3"
+    dfs_stage3.append(df)
+df_stage3 = pd.concat(dfs_stage3, ignore_index=True)
 
-df_all = pd.concat([df_stage1, df_stage2], ignore_index=True)
+df_all = pd.concat([df_stage1, df_stage2, df_stage3], ignore_index=True)
+
 
 # %%
 df_all.columns = (
@@ -60,6 +74,7 @@ X.columns = X.columns.str.replace('/', '_per_')
 numeric_cols = X.select_dtypes(include=[np.number]).columns
 X[numeric_cols] = np.log1p(X[numeric_cols])
 
+
 # %%
 labels = df_all["stage"]
 X = df_all.select_dtypes(include=[np.number])
@@ -67,6 +82,7 @@ X = X.drop(columns=["batch", "src_port", "dst_port", "protocol"], errors="ignore
 
 X = X.fillna(0)
 X_scaled = StandardScaler().fit_transform(X)
+
 
 # %%
 X_2d = PCA(n_components=2).fit_transform(X_scaled)
@@ -80,6 +96,7 @@ for stage in labels.unique():
 plt.legend()
 plt.title("PCA by Stage")
 plt.show()
+
 
 # %%
 tsne = TSNE(
@@ -106,5 +123,6 @@ plt.title("t-SNE: Flow Distribution by Stage")
 plt.xlabel("Dim 1")
 plt.ylabel("Dim 2")
 plt.show()
+
 
 # %%

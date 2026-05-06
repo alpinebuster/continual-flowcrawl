@@ -1,6 +1,7 @@
 .idea/
 
 # Project Specific
+output
 output/*
 !output/.gitkeep
 browsertime-results

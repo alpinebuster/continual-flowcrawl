@@ -14,7 +14,7 @@ def parse_seq(col):
     return col.apply(ast.literal_eval)
 
 
-WEBSITE = "github.com"
+WEBSITE = "baidu.com"
 FE_TYPE = "darkflow"
 files_stage1 = [
     f"{WEBSITE}-1/{FE_TYPE}-stage1_raw.csv",
@@ -31,9 +31,9 @@ df_stage1 = pd.concat(dfs_stage1, ignore_index=True)
 
 
 files_stage2 = [
-    f"{WEBSITE}-1/{FE_TYPE}-stage2_tor.csv",
-    f"{WEBSITE}-2/{FE_TYPE}-stage2_tor.csv",
-    f"{WEBSITE}-3/{FE_TYPE}-stage2_tor.csv"
+    f"{WEBSITE}-1/{FE_TYPE}-stage2_clash.csv",
+    f"{WEBSITE}-2/{FE_TYPE}-stage2_clash.csv",
+    f"{WEBSITE}-3/{FE_TYPE}-stage2_clash.csv"
 ]
 dfs_stage2 = []
 for i, f in enumerate(files_stage2, 1):
@@ -43,20 +43,8 @@ for i, f in enumerate(files_stage2, 1):
     dfs_stage2.append(df)
 df_stage2 = pd.concat(dfs_stage2, ignore_index=True)
 
-files_stage3 = [
-    f"{WEBSITE}-1/{FE_TYPE}-stage3_clash.csv",
-    f"{WEBSITE}-2/{FE_TYPE}-stage3_clash.csv",
-    f"{WEBSITE}-3/{FE_TYPE}-stage3_clash.csv"
-]
-dfs_stage3 = []
-for i, f in enumerate(files_stage3, 1):
-    df = pd.read_csv(f)
-    df["batch"] = i
-    df["stage"] = "stage3"
-    dfs_stage3.append(df)
-df_stage3 = pd.concat(dfs_stage3, ignore_index=True)
+df_all = pd.concat([df_stage1, df_stage2], ignore_index=True)
 
-df_all = pd.concat([df_stage1, df_stage2, df_stage3], ignore_index=True)
 
 # %%
 df_all.columns = (
@@ -70,6 +58,7 @@ df_all["pkt_dir_seq"] = parse_seq(df_all["pkt_dir_seq"])
 df_all["pkt_len_seq"] = parse_seq(df_all["pkt_len_seq"])
 df_all["pkt_usec_seq"] = parse_seq(df_all["pkt_usec_seq"])
 
+
 # %%
 row = df_all.iloc[0]
 
@@ -79,12 +68,14 @@ plt.title("Packet Direction Sequence")
 plt.yticks([-1,1])
 plt.show()
 
+
 # %%
 plt.figure(figsize=(10,3))
 plt.plot(row["pkt_len_seq"], marker='o')
 plt.title("Packet Length Sequence")
 plt.ylabel("Bytes")
 plt.show()
+
 
 # %%
 ts = np.array(row["pkt_usec_seq"])
@@ -94,6 +85,7 @@ plt.figure(figsize=(10,3))
 plt.plot(iat, marker='o')
 plt.title("Inter-Arrival Time (usec)")
 plt.show()
+
 
 # %%
 fig, axs = plt.subplots(3, 1, figsize=(10,6), sharex=True)
@@ -109,6 +101,7 @@ axs[2].set_title("IAT")
 
 plt.tight_layout()
 plt.show()
+
 
 # %%
 for i in range(5):
@@ -152,6 +145,7 @@ for stage in df_all["stage"].unique():
     plt.ylabel("Flow")
     plt.show()
 
+
 # %%
 stages = df_all["stage"].unique()
 
@@ -171,6 +165,7 @@ plt.suptitle("Packet Length Comparison by Stage")
 plt.tight_layout()
 plt.show()
 
+
 # %%
 def combine_dir_len(row):
     return [d*l for d,l in zip(row["pkt_dir_seq"], row["pkt_len_seq"])]
@@ -184,5 +179,6 @@ plt.plot(row["signed_len_seq"])
 plt.title("Signed Packet Length Sequence")
 plt.axhline(0, color='black')
 plt.show()
+
 
 # %%
