@@ -56,7 +56,7 @@ services:
       - clashnet
 
   metacubexd:
-    profiles: ["flowcrawl-ui"]
+    profiles: ["flowcrawl"]
     image: ghcr.io/metacubex/metacubexd
     container_name: metacubexd
     restart: unless-stopped

@@ -65,7 +65,7 @@ def main(output_dirname):
     curl -x socks5h://127.0.0.1:27890 'https://google.com/'
     tcpdump -r ./data/pcap/stage2_clash.pcap
     """
-    output_dir = os.path.join("./data/vless/pcap-clash_only", output_dirname)
+    output_dir = os.path.join("./data/ss/pcap-clash_only", output_dirname)
     os.makedirs(output_dir, exist_ok=True)
     print(f"[+] Output dir: {output_dir}")
 
