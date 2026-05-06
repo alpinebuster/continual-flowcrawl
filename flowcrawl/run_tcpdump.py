@@ -65,7 +65,7 @@ def main(output_dirname):
     curl -x socks5h://127.0.0.1:9050 'https://check.torproject.org/api/ip'
     tcpdump -r ./data/pcap/stage3_clash.pcap
     """
-    output_dir = os.path.join("./data/ss/pcap/", output_dirname)
+    output_dir = os.path.join("./data/trojan/pcap/", output_dirname)
     os.makedirs(output_dir, exist_ok=True)
     print(f"[+] Output dir: {output_dir}")
 

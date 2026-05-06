@@ -1,0 +1,168 @@
+# %%
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+import seaborn as sns
+import umap
+
+
+WEBSITE = "google.com"
+FE_TYPE = "nfstream"
+files_stage1 = [
+    f"{WEBSITE}-1/{FE_TYPE}-stage1_raw.csv",
+    f"{WEBSITE}-2/{FE_TYPE}-stage1_raw.csv",
+    f"{WEBSITE}-3/{FE_TYPE}-stage1_raw.csv",
+]
+dfs_stage1 = []
+for i, f in enumerate(files_stage1, 1):
+    df = pd.read_csv(f)
+    df["batch"] = i
+    df["stage"] = "stage1"
+    dfs_stage1.append(df)
+df_stage1 = pd.concat(dfs_stage1, ignore_index=True)
+
+
+files_stage2 = [
+    f"{WEBSITE}-1/{FE_TYPE}-stage2_clash.csv",
+    f"{WEBSITE}-2/{FE_TYPE}-stage2_clash.csv",
+    f"{WEBSITE}-3/{FE_TYPE}-stage2_clash.csv",
+]
+dfs_stage2 = []
+for i, f in enumerate(files_stage2, 1):
+    df = pd.read_csv(f)
+    df["batch"] = i
+    df["stage"] = "stage2"
+    dfs_stage2.append(df)
+df_stage2 = pd.concat(dfs_stage2, ignore_index=True)
+
+df_all = pd.concat([df_stage1, df_stage2], ignore_index=True)
+
+
+# %%
+df_all.columns = (
+    df_all.columns
+    .str.strip()
+    .str.lower()
+    .str.replace(' ', '_')
+    .str.replace('.', '')
+)
+cols_to_drop = [
+    "flow_id",
+    "src_ip", "dst_ip",
+    "src_port", "dst_port", "protocol",
+    "timestamp",
+]
+
+X = df_all.drop(columns=cols_to_drop, errors="ignore")
+X.columns = X.columns.str.replace('/', '_per_')
+
+numeric_cols = X.select_dtypes(include=[np.number]).columns
+print("Inf count:", np.isinf(X[numeric_cols]).sum().sum())
+print("NaN count:", np.isnan(X[numeric_cols]).sum().sum())
+X[numeric_cols] = X[numeric_cols].replace([np.inf, -np.inf], np.nan)
+
+print("Max value:", np.max(X[numeric_cols].values))
+print("Min value:", np.min(X[numeric_cols].values))
+
+
+# %%
+labels = df_all["stage"]
+X_num = X.select_dtypes(include=[np.number])
+X_num = X_num.drop(columns=["batch", "stage"], errors="ignore")
+
+X_scaled = StandardScaler().fit_transform(X_num)
+
+
+# %%
+reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
+X_umap = reducer.fit_transform(X_scaled)
+
+viz = pd.DataFrame({
+    "UMAP1": X_umap[:, 0],
+    "UMAP2": X_umap[:, 1],
+    "stage": labels.values
+})
+
+plt.figure(figsize=(8,6))
+sns.scatterplot(data=viz, x="UMAP1", y="UMAP2", hue="stage", alpha=0.6)
+plt.title("UMAP: stage separation")
+plt.show()
+
+
+# %%
+X_corr = X_num.copy()
+corr = X_corr.corr()
+
+constant_cols = [col for col in X_corr.columns if X_corr[col].nunique() <= 1]
+print("Constant columns:", len(constant_cols))
+
+nan_cols = corr.columns[corr.isna().all()]
+print("All-NaN correlation columns:", len(nan_cols))
+
+valid_cols = corr.columns[~corr.isna().all()]
+print("Valid columns:", len(valid_cols))
+
+plt.figure(figsize=(20, 18))
+sns.heatmap(corr, cmap='coolwarm', center=0)
+plt.title("Correlation Heatmap")
+# plt.xticks(rotation=45)
+plt.show()
+
+
+# %%
+threshold = 0.7
+corr_filtered = corr.copy()
+corr_filtered[(corr.abs() < threshold)] = 0
+
+plt.figure(figsize=(14, 10))
+sns.heatmap(corr_filtered, cmap='coolwarm', center=0)
+plt.title("Strong Correlations (|r| > 0.7)")
+plt.show()
+
+
+# %%
+X_2d = PCA(n_components=2).fit_transform(X_scaled)
+
+plt.figure(figsize=(6,5))
+
+for stage in labels.unique():
+    idx = labels == stage
+    plt.scatter(X_2d[idx,0], X_2d[idx,1], s=10, label=stage)
+
+plt.legend()
+plt.title("PCA by Stage")
+plt.show()
+
+
+# %%
+tsne = TSNE(
+    n_components=2,
+    perplexity=5,
+    random_state=42,
+    max_iter=1000
+)
+X_tsne = tsne.fit_transform(X_scaled)
+
+plt.figure(figsize=(7,6))
+
+for stage in labels.unique():
+    idx = labels == stage
+    plt.scatter(
+        X_tsne[idx, 0],
+        X_tsne[idx, 1],
+        s=10,
+        label=stage
+    )
+
+plt.legend()
+plt.title("t-SNE: Flow Distribution by Stage")
+plt.xlabel("Dim 1")
+plt.ylabel("Dim 2")
+plt.show()
+
+
+# %%
