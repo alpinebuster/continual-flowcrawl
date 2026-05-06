@@ -106,6 +106,8 @@ def main(output_dirname):
         "-i", BRIDGE,
         "host", CLASH_IP,
         "and", "not", "host", TOR_IP,
+        "and", "not", "port", "9090",
+        "and", "not", "arp",
         # "and not net", SUBNET,
         "-nn", "-s", "0",
         "-w", os.path.join(output_dir, "stage3_clash.pcap"),

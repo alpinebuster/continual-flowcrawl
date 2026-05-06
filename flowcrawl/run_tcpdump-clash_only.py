@@ -71,13 +71,11 @@ def main(output_dirname):
 
     print("[*] Fetching container info...")
 
-    TOR_IP = get_container_ip("tor")
     CLASH_IP = get_container_ip("clash")
     NETWORK_NAME = "continual-flowcrawl_clashnet"
     BRIDGE = get_bridge_name(NETWORK_NAME)
     SUBNET = get_subnet(NETWORK_NAME)
 
-    print(f"[+] TOR_IP   = {TOR_IP}")
     print(f"[+] CLASH_IP = {CLASH_IP}")
     print(f"[+] BRIDGE   = {BRIDGE}")
     print(f"[+] SUBNET   = {SUBNET}")
@@ -97,6 +95,8 @@ def main(output_dirname):
         "-i", BRIDGE,
         "host", CLASH_IP,
         "and", "not", "tcp", "port", "27890",
+        "and", "not", "port", "9090",
+        "and", "not", "arp",
         "-nn", "-s", "0",
         "-w", os.path.join(output_dir, "stage2_clash.pcap"),
     ]
