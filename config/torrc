@@ -194,7 +194,7 @@
 
 #HTTPSProxy clash:27890
 #HTTPSProxyAuthenticator user:password
-#Socks5Proxy clash:27890
+Socks5Proxy clash:27890
 SocksPort 0.0.0.0:9050
 ControlPort 0.0.0.0:9051
 

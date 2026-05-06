@@ -60,12 +60,12 @@ def get_subnet(network_name):
 
 def main(output_dirname):
     """
-    sudo python3 flowcrawl/run_tcpdump-clash_only.py --output check.torproject.org
+    sudo python3 flowcrawl/run_tcpdump-clash_only.py --output google.com
     pgrep -a tcpdump
     curl -x socks5h://127.0.0.1:27890 'https://google.com/'
     tcpdump -r ./data/pcap/stage2_clash.pcap
     """
-    output_dir = os.path.join("./data/pcap-clash_only", output_dirname)
+    output_dir = os.path.join("./data/vless/pcap-clash_only", output_dirname)
     os.makedirs(output_dir, exist_ok=True)
     print(f"[+] Output dir: {output_dir}")
 
