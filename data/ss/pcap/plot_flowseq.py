@@ -73,34 +73,7 @@ df_all["pkt_usec_seq"] = parse_seq(df_all["pkt_usec_seq"])
 
 
 # %%
-row = df_all.iloc[0]
-
-plt.figure(figsize=(10,2))
-plt.plot(row["pkt_dir_seq"], marker='o')
-plt.title("Packet Direction Sequence")
-plt.yticks([-1,1])
-plt.show()
-
-
-# %%
-plt.figure(figsize=(10,3))
-plt.plot(row["pkt_len_seq"], marker='o')
-plt.title("Packet Length Sequence")
-plt.ylabel("Bytes")
-plt.show()
-
-
-# %%
-ts = np.array(row["pkt_usec_seq"])
-iat = np.diff(ts)
-
-plt.figure(figsize=(10,3))
-plt.plot(iat, marker='o')
-plt.title("Inter-Arrival Time (usec)")
-plt.show()
-
-
-# %%
+# MARK
 fig, axs = plt.subplots(3, 1, figsize=(10,6), sharex=True)
 
 axs[0].plot(row["pkt_dir_seq"])
@@ -117,16 +90,6 @@ plt.show()
 
 
 # %%
-for i in range(5):
-    row = df_all.iloc[i]
-    plt.plot(row["pkt_len_seq"], alpha=0.3)
-
-plt.title("Packet Length Overlay")
-plt.show()
-
-
-# %%
-# MARK
 def pad_sequences(seqs, max_len=100):
     padded = [
         list(seq[:max_len]) + [0]*(max_len-len(seq))
@@ -157,41 +120,6 @@ for stage in df_all["stage"].unique():
     plt.xlabel("Packet Index")
     plt.ylabel("Flow")
     plt.show()
-
-
-# %%
-stages = df_all["stage"].unique()
-
-fig, axes = plt.subplots(1, len(stages), figsize=(15,4), sharey=True)
-
-for i, stage in enumerate(stages):
-    df_stage = df_all[df_all["stage"] == stage]
-    X_len = pad_sequences(df_stage["pkt_len_seq"], max_len=100)
-
-    sns.heatmap(X_len, cmap="viridis", ax=axes[i], cbar=False)
-    axes[i].set_title(stage)
-    axes[i].set_xlabel("Packet Index")
-
-axes[0].set_ylabel("Flow")
-
-plt.suptitle("Packet Length Comparison by Stage")
-plt.tight_layout()
-plt.show()
-
-
-# %%
-def combine_dir_len(row):
-    return [d*l for d,l in zip(row["pkt_dir_seq"], row["pkt_len_seq"])]
-
-df_all["signed_len_seq"] = df_all.apply(combine_dir_len, axis=1)
-
-row = df_all.iloc[8]
-
-plt.figure(figsize=(10,3))
-plt.plot(row["signed_len_seq"])
-plt.title("Signed Packet Length Sequence")
-plt.axhline(0, color='black')
-plt.show()
 
 
 # %%

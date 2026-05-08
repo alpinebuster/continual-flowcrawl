@@ -132,7 +132,7 @@ async def worker(worker_id, network, queue):
         ]
 
         success = False
-        for attempt in range(RETRY + 1):
+        for attempt in range(RETRY):
             try:
                 print(f"[W{worker_id}][{idx}] RUN ({attempt+1}/{RETRY+1}) {url}")
                 await run_cmd(cmd, TIMEOUT)

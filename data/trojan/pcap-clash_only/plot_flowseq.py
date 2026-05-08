@@ -167,18 +167,3 @@ plt.show()
 
 
 # %%
-def combine_dir_len(row):
-    return [d*l for d,l in zip(row["pkt_dir_seq"], row["pkt_len_seq"])]
-
-df_all["signed_len_seq"] = df_all.apply(combine_dir_len, axis=1)
-
-row = df_all.iloc[8]
-
-plt.figure(figsize=(10,3))
-plt.plot(row["signed_len_seq"])
-plt.title("Signed Packet Length Sequence")
-plt.axhline(0, color='black')
-plt.show()
-
-
-# %%
