@@ -4,7 +4,6 @@ https://google.com
 https://baidu.com
 https://facebook.com
 https://youtube.com
-https://baidu.com
 https://yahoo.com
 https://amazon.com
 https://wikipedia.org
