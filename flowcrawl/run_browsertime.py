@@ -61,6 +61,9 @@ async def run_cmd(cmd, timeout):
         *cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        # IMPORTANT:
+        # create separate process group
+        preexec_fn=os.setsid,
     )
 
     try:
@@ -69,13 +72,24 @@ async def run_cmd(cmd, timeout):
             timeout=timeout,
         )
     except asyncio.TimeoutError:
-        proc.kill()
-
+        print("[run_cmd] timeout reached")
+        # Graceful terminate process group
         try:
-            await proc.wait()
-        except Exception:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except ProcessLookupError:
             pass
-        raise RuntimeError("Command timed out")
+
+        # Give it a chance to exit cleanly
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=10)
+        except asyncio.TimeoutError:
+            # Force kill if still alive
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
+        raise asyncio.TimeoutError()
 
     # Print subprocess output
     if stdout:
@@ -86,6 +100,46 @@ async def run_cmd(cmd, timeout):
     assert proc.returncode is not None
     if proc.returncode != 0:
         raise subprocess.CalledProcessError(proc.returncode, cmd)
+
+
+def cleanup_container(container_name):
+    """
+    Force cleanup docker container safely.
+    """
+    # Graceful stop first
+    subprocess.run(
+        [
+            "docker",
+            "stop",
+            "-t",
+            "15",
+            container_name,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    # Force remove
+    subprocess.run(
+        [
+            "docker",
+            "rm",
+            "-f",
+            container_name,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def cleanup_tcpdump():
+    """
+    Emergency cleanup for leaked tcpdump.
+    """
+    subprocess.run(
+        ["pkill", "-f", "tcpdump"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 async def worker(worker_id, network, queue):
@@ -103,7 +157,8 @@ async def worker(worker_id, network, queue):
 
         container_name = f"bt-{worker_id}-{idx}-{int(time.time())}"
         cmd = [
-            "docker", "run", "--rm",
+            "docker", "run",
+            # "--rm",
             "--network", network,
             "--name", container_name,
             "-v", f"{output_dir}:/browsertime",
@@ -141,19 +196,11 @@ async def worker(worker_id, network, queue):
                 break
             except asyncio.TimeoutError:
                 print(f"[W{worker_id}][{idx}] TIMEOUT {url}")
-                subprocess.run(
-                    ["docker", "rm", "-f", container_name],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
+                cleanup_container(container_name)
                 print(f"[W{worker_id}][{idx}] TIMEOUT {url} -> killed {container_name}")
             except Exception as e:
                 print(f"[W{worker_id}][{idx}] ERROR {url}: {e}")
-                subprocess.run(
-                    ["docker", "rm", "-f", container_name],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
+                cleanup_container(container_name)
                 print(f"[W{worker_id}][{idx}] ERROR {url} -> killed {container_name}")
 
         if not success:
@@ -224,7 +271,12 @@ def main():
 
 
 if __name__ == "__main__":
-    """e.g.
-       `nohup python -u ./flowcrawl/run_browsertime.py data/links-for-request/ech/links-CF.txt > run_browsertime.log 2>&1 &`
+    """
+    Example:
+
+    nohup python -u \
+      ./flowcrawl/run_browsertime.py \
+      data/links-for-request/ech/links-CF.txt \
+      > run_browsertime.log 2>&1 &
     """
     main()

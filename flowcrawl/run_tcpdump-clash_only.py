@@ -137,7 +137,6 @@ def main(link_file: str, output_dirname: str):
         if os.listdir(output_dir):
             print(f"[!] {idx+1}/{len(websites)} Skip {url} (already processed)")
             continue
-
         print(f"[+] Output dir: {output_dir}")
 
         print("\n" + "=" * 80)
@@ -205,7 +204,7 @@ def main(link_file: str, output_dirname: str):
 if __name__ == "__main__":
     """
        sudo python3 flowcrawl/run_tcpdump-clash_only.py \
-        --output data/trojan/pcap-clash_only \
+        --output data/vmess/pcap-clash_only \
         --link-file data/links-for-request/top-1000-websites.txt
     """
     parser = argparse.ArgumentParser()
