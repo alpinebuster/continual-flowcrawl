@@ -134,6 +134,10 @@ def main(link_file: str, output_dirname: str):
         url_dirname = sanitize_dirname(url)
         output_dir = os.path.join(output_dirname, url_dirname)
         os.makedirs(output_dir, exist_ok=True)
+        if os.listdir(output_dir):
+            print(f"[!] {idx+1}/{len(websites)} Skip {url} (already processed)")
+            continue
+
         print(f"[+] Output dir: {output_dir}")
 
         print("\n" + "=" * 80)
@@ -190,7 +194,7 @@ def main(link_file: str, output_dirname: str):
                     pass
             print("[+] tcpdump stopped.")
 
-    print("[!] Press Ctrl+C to stop.\n")
+    print("[!] Press Ctrl+C to stop cleanly.\n")
     try:
         while True:
             time.sleep(1)
