@@ -81,7 +81,7 @@ async def run_cmd(cmd, timeout):
 
         # Give it a chance to exit cleanly
         try:
-            await asyncio.wait_for(proc.wait(), timeout=10)
+            await asyncio.wait_for(proc.wait(), timeout=12)
         except asyncio.TimeoutError:
             # Force kill if still alive
             try:
@@ -112,7 +112,7 @@ def cleanup_container(container_name):
             "docker",
             "stop",
             "-t",
-            "15",
+            "12",
             container_name,
         ],
         stdout=subprocess.DEVNULL,
@@ -133,7 +133,7 @@ def cleanup_container(container_name):
 
 def cleanup_tcpdump():
     """
-    Emergency cleanup for leaked tcpdump.
+    [!] Emergency cleanup for leaked tcpdump.
     """
     subprocess.run(
         ["pkill", "-f", "tcpdump"],
@@ -192,7 +192,7 @@ async def worker(worker_id, network, queue):
         success = False
         for attempt in range(RETRY):
             try:
-                print(f"[W{worker_id}][{idx}] RUN ({attempt+1}/{RETRY+1}) {url}")
+                print(f"[W{worker_id}][{idx}] RUN ({attempt+1}/{RETRY}) {url}")
                 await run_cmd(cmd, TIMEOUT)
                 print(f"[W{worker_id}][{idx}] SUCCESS {url}")
                 success = True
@@ -205,6 +205,7 @@ async def worker(worker_id, network, queue):
                 print(f"[W{worker_id}][{idx}] ERROR {url}: {e}")
                 cleanup_container(container_name)
                 print(f"[W{worker_id}][{idx}] ERROR {url} -> killed {container_name}")
+            await asyncio.sleep(5 * (attempt + 1))
 
         if not success:
             print(f"[W{worker_id}][{idx}] FAILED {url}")
