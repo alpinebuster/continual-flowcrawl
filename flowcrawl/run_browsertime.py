@@ -102,11 +102,14 @@ async def worker(worker_id, network, queue):
         await asyncio.sleep(random.uniform(0.5, 2.0))
 
         container_name = f"bt-{worker_id}-{idx}-{int(time.time())}"
+        nopasswd_config_path = os.path.join(os.getcwd(), "config/browsertime-sudoers/nopasswd")
         cmd = [
             "docker", "run", "--rm",
             "--network", network,
             "--name", container_name,
             "-v", f"{output_dir}:/browsertime",
+            # NOTE: this fixes `sudo: a terminal is required to read the password;`
+            "-v", f"{nopasswd_config_path}:/etc/sudoers.d/nopasswd:ro",
             DOCKER_IMAGE,
 
             "-n", str(SAMPLES_PER_SITE),
