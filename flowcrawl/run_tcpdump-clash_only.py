@@ -98,8 +98,9 @@ def run_curl(url: str):
         print(f"[+] curl return code: {result.returncode}")
         # print("\n===== STDOUT =====")
         # print(result.stdout)
-        print("\n===== STDERR =====")
-        print(result.stderr)
+        if result.stderr:
+            print("\n===== STDERR =====")
+            print(result.stderr)
     except Exception as e:
         print(f"[!] curl failed: {e}")
 
@@ -208,7 +209,7 @@ def main(link_file: str, output_dirname: str):
 if __name__ == "__main__":
     """
        sudo python3 flowcrawl/run_tcpdump-clash_only.py \
-        --output data/vmess/pcap-clash_only \
+        --output data/vless/pcap-clash_only \
         --link-file data/links-for-request/top-1000-websites.txt
     """
     parser = argparse.ArgumentParser()
