@@ -195,7 +195,10 @@ def main(link_file: str, output_dirname: str):
 
     print("[!] Press Ctrl+C to stop cleanly.\n")
     try:
+        i = 0
         while True:
+            print(f"\rWaiting... {i}", end="", flush=True)
+            i += 1
             time.sleep(1)
     except KeyboardInterrupt:
         cleanup()
