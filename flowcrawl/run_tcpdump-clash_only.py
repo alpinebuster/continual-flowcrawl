@@ -79,6 +79,7 @@ def run_curl(url: str):
     cmd = [
         "curl",
         # "-L",
+        "-sS",
         "--max-time",
         str(CURL_TIMEOUT),
         "-x",
@@ -95,8 +96,8 @@ def run_curl(url: str):
             text=True,
         )
         print(f"[+] curl return code: {result.returncode}")
-        print("\n===== STDOUT =====")
-        print(result.stdout)
+        # print("\n===== STDOUT =====")
+        # print(result.stdout)
         print("\n===== STDERR =====")
         print(result.stderr)
     except Exception as e:
