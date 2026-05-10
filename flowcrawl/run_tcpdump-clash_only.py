@@ -208,9 +208,13 @@ def main(link_file: str, output_dirname: str):
 
 if __name__ == "__main__":
     """
-       sudo python3 flowcrawl/run_tcpdump-clash_only.py \
+    Example:
+
+       sudo -v
+       nohup python3 flowcrawl/run_tcpdump-clash_only.py \
         --output data/vless/pcap-clash_only \
-        --link-file data/links-for-request/top-1000-websites.txt
+        --link-file data/links-for-request/top-1000-websites.txt \
+        > run_tcpdump-clash_only.log 2>&1 &
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(

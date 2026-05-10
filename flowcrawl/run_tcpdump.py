@@ -219,9 +219,13 @@ def main(link_file: str, output_dirname: str):
 
 if __name__ == "__main__":
     """
-       sudo python3 flowcrawl/run_tcpdump.py \
+    Example:
+
+       sudo -v
+       nohup python3 flowcrawl/run_tcpdump.py \
         --output data/vless/pcap \
-        --link-file data/links-for-request/top-1000-websites.txt
+        --link-file data/links-for-request/top-1000-websites.txt \
+        > run_tcpdump.log 2>&1 &
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
