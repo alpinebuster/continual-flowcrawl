@@ -210,7 +210,8 @@ if __name__ == "__main__":
     """
     Example:
 
-       sudo -v
+       echo "$(whoami) ALL=(ALL) NOPASSWD: $(which tcpdump)" | sudo tee /etc/sudoers.d/tcpdump
+       sudo chmod 440 /etc/sudoers.d/tcpdump
        nohup python3 flowcrawl/run_tcpdump-clash_only.py \
         --output data/vless/pcap-clash_only \
         --link-file data/links-for-request/top-1000-websites.txt \
