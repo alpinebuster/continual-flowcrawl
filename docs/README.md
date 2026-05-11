@@ -48,7 +48,7 @@ Inner cipher suite = language used inside the room
 
 ## Roadmap
 
-> This depends on how Huawei’s generalization test set is constructed. Our data is collected at the **client side**, where a full ECH access event can be observed. Huawei’s may be collected at the **network gateway**, where only single-session traffic is visible.
+> This depends on how the generalization test set is constructed. Our data is collected at the **client side**, where a full ECH access event can be observed. It may be collected at the **network gateway**, where only single-session traffic is visible.
 
 Under ECH, in `Client → Network Gateway → CDN`, the following is visible:
 
@@ -73,7 +73,7 @@ Preliminary approaches:
 
 * For difficulty B, use multimodal data. Not all traffic of ECH-enabled websites is fully encrypted; a significant portion remains non-ECH. If multimodal data can be constructed, traditional traffic behavior features can be incorporated.
 
-* For difficulty B, if Huawei’s dataset is collected at the **network gateway** with only single-session data, use client-side classification to obtain multimodal data. Even with ECH, the handshake still exposes: TLS ClientHello fingerprint + QUIC fingerprint (JA3 / JA4)
+* For difficulty B, if the target dataset is collected at the **network gateway** with only single-session data, use client-side classification to obtain multimodal data. Even with ECH, the handshake still exposes: TLS ClientHello fingerprint + QUIC fingerprint (JA3 / JA4)
 
 * For difficulty B, use client-side classification to supplement DNS-side information (if DoH is not used)
 
