@@ -1,5 +1,8 @@
 import asyncio
 import os
+import uuid
+from datetime import datetime
+import signal
 import sys
 import re
 import time
@@ -11,13 +14,12 @@ from pathlib import Path
 
 DOCKER_IMAGE = "sitespeedio/browsertime:latest"
 
-TIMEOUT = 43200 # Maximum time for each task (in seconds, # 12 hours)
+TIMEOUT = 600 # Maximum time for each task (in seconds)
 RETRY = 2       # Number of retries
 
 SAMPLES_PER_SITE = 100
 
-# FIXME: There will be residual tcpdump processes when the request fails
-WORKERS = min(1, cpu_count())
+WORKERS = min(6, cpu_count())
 print(f"Workers: {WORKERS}")
 NETWORKS = [f"flowcrawl-net-{i}" for i in range(WORKERS)]
 
@@ -40,11 +42,18 @@ def collect_txt_files(input_path: str) -> list[Path]:
     return []
 
 
-def is_task_done(output_dir: str) -> bool:
-    for path in Path(output_dir).rglob("browsertime.json"):
-        if path.stat().st_size > 1000:
-            return True
-    return False
+def is_task_done(output_dir: str, samples_per_site: int = 100) -> bool:
+    p = Path(output_dir)
+
+    valid = 0
+    for d in p.iterdir():
+        if not d.is_dir():
+            continue
+
+        if (d / "browsertime.json").exists():
+            valid += 1
+
+    return valid >= samples_per_site
 
 
 def ensure_networks(networks: list):
@@ -55,6 +64,12 @@ def ensure_networks(networks: list):
         if result.returncode != 0:
             print(f"[+] Creating network: {net}")
             subprocess.run(["docker", "network", "create", net], check=True)
+
+            result_again = subprocess.run(
+                ["docker", "network", "inspect", net],
+            )
+            if result_again.returncode != 0:
+                raise Exception(f"[!] Can NOT create the network: {net}")
 
 
 async def run_cmd(cmd, timeout):
@@ -151,24 +166,23 @@ async def worker(worker_id, network, queue):
             break
 
         url, output_dir, idx = task
-
-        os.makedirs(output_dir, exist_ok=True)
         # Startup jitter
-        await asyncio.sleep(random.uniform(0.5, 2.0))
+        await asyncio.sleep(random.uniform(1.2, 3.6))
 
-        container_name = f"bt-{worker_id}-{idx}-{int(time.time())}"
+        container_name = f"bt-w_{worker_id}-i_{idx}-{int(time.time())}"
         nopasswd_config_path = os.path.join(os.getcwd(), "config/browsertime-sudoers/nopasswd")
         cmd = [
             "docker", "run",
-            # "--rm",
+            "--rm",
             "--network", network,
             "--name", container_name,
-            "-v", f"{output_dir}:/browsertime",
+            "-v", f"{output_dir}:{output_dir}",
             # NOTE: this fixes `sudo: a terminal is required to read the password;`
             "-v", f"{nopasswd_config_path}:/etc/sudoers.d/nopasswd:ro",
             DOCKER_IMAGE,
 
-            "-n", str(SAMPLES_PER_SITE),
+            "-n", "1",
+            "--resultDir", f"{output_dir}",
             "--video", "--tcpdump", "--visualMetrics",
             # Wait up to 10 seconds for elements
             # "--timeouts.elementWait", "10000",
@@ -193,7 +207,12 @@ async def worker(worker_id, network, queue):
         success = False
         for attempt in range(RETRY):
             try:
-                print(f"[W{worker_id}][{idx}] RUN ({attempt+1}/{RETRY}) {url}")
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                print(
+                    f"[{now}] "
+                    f"[W{worker_id}][{idx}] "
+                    f"RUN ({attempt+1}/{RETRY}) {url}"
+                )
                 await run_cmd(cmd, TIMEOUT)
                 print(f"[W{worker_id}][{idx}] SUCCESS {url}")
                 success = True
@@ -214,6 +233,11 @@ async def worker(worker_id, network, queue):
         queue.task_done()
 
 
+async def delayed_worker(delay, i, net, queue):
+    await asyncio.sleep(delay)
+    await worker(i, net, queue)
+
+
 async def main_async(tasks):
     queue = asyncio.Queue()
 
@@ -223,15 +247,17 @@ async def main_async(tasks):
     # Start the worker (each bound to one network)
     workers = []
     for i, net in enumerate(NETWORKS):
-        workers.append(asyncio.create_task(worker(i, net, queue)))
+        workers.append(
+            asyncio.create_task(
+                delayed_worker(i*0.2, i, net, queue)
+            )
+        )
 
     # Wait until the task is completed
     await queue.join()
-
     # Stop the worker
     for _ in workers:
         await queue.put(None)
-
     await asyncio.gather(*workers)
 
 
@@ -256,16 +282,34 @@ def main():
     print(f"Total raw URLs: {len(all_urls)}")
 
     tasks = []
-    for i, url in enumerate(sorted(all_urls)):
+    task_id = 0
+    for _, url in enumerate(sorted(all_urls)):
         parsed = urlparse(url)
         domain = parsed.netloc
-        output_dir = os.path.abspath(f"output/{domain}")
 
+        domain_output_dir = os.path.abspath(f"output/{domain}")
         # Skip completed
-        if is_task_done(output_dir):
+        if is_task_done(
+            domain_output_dir,
+            SAMPLES_PER_SITE,
+        ):
             print(f"[SKIP] {url}")
             continue
-        tasks.append((url, output_dir, i))
+
+        # Repeat `SAMPLES_PER_SITE` times for each URL
+        for _ in range(SAMPLES_PER_SITE):
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+            uid = uuid.uuid4().hex[:8]
+            output_dir = os.path.abspath(
+                f"{domain_output_dir}/{timestamp}-{uid}"
+            )
+
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+
+            print(f"[+] Create task_{task_id} [{url}, output_dir: {output_dir}]")
+            tasks.append((url, output_dir, task_id))
+            task_id += 1
 
     print(f"Tasks to run: {len(tasks)}")
     if not tasks:
@@ -283,5 +327,8 @@ if __name__ == "__main__":
       ./flowcrawl/run_browsertime.py \
       data/links-for-request/ech/links-CF.txt \
       > run_browsertime.log 2>&1 &
+
+    ps -aux | grep run_browsertime
+    pkill -f run_browsertime
     """
     main()
