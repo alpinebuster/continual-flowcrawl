@@ -16,7 +16,8 @@ RETRY = 2       # Number of retries
 
 SAMPLES_PER_SITE = 100
 
-WORKERS = min(2, cpu_count())
+# FIXME: There will be residual tcpdump processes when the request fails
+WORKERS = min(1, cpu_count())
 print(f"Workers: {WORKERS}")
 NETWORKS = [f"flowcrawl-net-{i}" for i in range(WORKERS)]
 
