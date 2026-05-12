@@ -35,7 +35,7 @@ services:
       - '27890:27890'
       - '9090:9090' # external controller (Restful API)
     volumes:
-      - ./config/trojan.yaml:/root/.config/mihomo/config.yaml
+      - ./config/vmess.yaml:/root/.config/mihomo/config.yaml
       # - ./ui:/root/.config/mihomo/ui/
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
