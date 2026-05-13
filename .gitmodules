@@ -1,0 +1,6 @@
+[submodule "browsertime"]
+	path = browsertime
+	url = https://github.com/alpinebuster/browsertime.git
+[submodule "libs/pagexray"]
+	path = libs/pagexray
+	url = https://github.com/alpinebuster/pagexray.git

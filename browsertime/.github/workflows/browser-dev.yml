@@ -1,0 +1,55 @@
+name: Test Firefox/Chrome dev
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+    - name: Use Node.js
+      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      with:
+        node-version: '24.x'
+        cache: 'npm'
+    - name: Install Firefox latest dev edition
+      uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8 # latest
+      with:
+        firefox-version: 'latest-devedition'
+    - name: Install Chrome dev
+      uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # latest
+      with:
+        chrome-version: dev
+    - name: Install Browsertime
+      run: npm ci
+    - name: Set up Python
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    - name: Install dependencies
+      run: |
+        sudo apt-get install net-tools -y
+        # Static ffmpeg from johnvansickle.com — replaces `snap install ffmpeg`,
+        # which has been flaky against the snap store from CI runners.
+        curl -fsSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz | sudo tar -xJ -C /opt/
+        sudo ln -sf /opt/ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/ffmpeg
+        sudo ln -sf /opt/ffmpeg-*-amd64-static/ffprobe /usr/local/bin/ffprobe
+        python -m pip install --upgrade pip setuptools==70.0.0 pyssim OpenCV-Python Numpy virtualenv
+        sudo modprobe ifb numifbs=1
+    - name: Browser versions
+      run: |
+        chrome --version
+        firefox --version
+    - name: Test Chrome dev
+      run: ./bin/browsertime.js -b chrome -n 1 https://www.sitespeed.io --connectivity.profile cable --connectivity.engine throttle --xvfb --chrome.binaryPath $(which chrome)
+    - name: Test Firefox dev
+      run: ./bin/browsertime.js -b firefox -n 1 https://www.sitespeed.io --connectivity.profile cable --connectivity.engine throttle --xvfb

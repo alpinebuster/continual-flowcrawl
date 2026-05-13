@@ -1,0 +1,29 @@
+# syntax=docker/dockerfile:1
+
+FROM alpine:edge
+
+RUN set -eu && \
+    apk update && \
+    apk upgrade && \
+    apk --no-cache add \
+    curl \
+    tor \
+    bash \
+    nyx \
+    tcpdump \
+    lyrebird && \
+    rm -rf /tmp/* /var/cache/apk/* && \
+    sed "1s/^/SocksPort 0.0.0.0:9050\n/" /etc/tor/torrc.sample > /etc/tor/torrc
+
+# 9050 - SOCKS Proxy Port (for "traffic")
+# 9051 - ControlPort (For control)
+EXPOSE 9050 9051
+
+HEALTHCHECK --interval=300s --timeout=15s --start-period=60s --start-interval=10s \
+    CMD curl -x socks5h://127.0.0.1:9050 'https://check.torproject.org/api/ip' | grep -qm1 -E '"IsTor"\s*:\s*true'
+
+VOLUME ["/etc/tor"]
+VOLUME ["/var/lib/tor"]
+
+USER tor
+CMD ["tor"]

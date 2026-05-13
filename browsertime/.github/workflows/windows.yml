@@ -1,0 +1,61 @@
+name: Windows tests
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+jobs:
+  build:
+    runs-on: windows-2025
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+    - name: Use Node.js
+      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      with:
+        node-version: '24.x'
+        cache: 'npm'
+    - name: Install Browsertime
+      run: npm ci
+    - name: Install ffmpeg
+      uses: AnimMouse/setup-ffmpeg@ae28d57dabbb148eff63170b6bf7f2b60062cbae # v1.2.3
+      with:
+        version: '7.1'
+    - name: Set up Python
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools
+        python -m pip install pyssim OpenCV-Python Numpy
+      shell: cmd
+    - name: Start local HTTP server
+      run: (npm run start-server&)
+    - name: Run Edge test
+      run: node bin/browsertime.js -b edge -n 1 --screenshot https://www.sitespeed.io/
+      shell: cmd
+    - name: Run Edge test with video
+      run: node bin/browsertime.js -b edge -n 1 --screenshot --video --visualMetrics --viewPort 1000x600 https://www.sitespeed.io/
+      shell: cmd
+    - name: Run Chrome test
+      run: node bin/browsertime.js -b chrome -n 1 https://www.sitespeed.io/
+      shell: cmd
+    - name: Run Chrome with config file
+      run: node bin/browsertime.js -b chrome https://www.sitespeed.io/ --config test/data/exampleConfig.json
+      shell: cmd
+    - name: Run Chrome test for multi pages
+      run: node bin/browsertime.js -b chrome -n 1 test/data/navigationscript/simple.cjs
+      shell: cmd
+    - name: Run Firefox test
+      run: node bin/browsertime.js -b firefox -n 1 https://www.sitespeed.io/ --skipHar
+      shell: cmd
+    - name: Run Firefox test with MOZ log
+      run: node bin/browsertime.js -b firefox -n 1 https://www.sitespeed.io/ --skipHar --firefox.collectMozLog
+      shell: cmd

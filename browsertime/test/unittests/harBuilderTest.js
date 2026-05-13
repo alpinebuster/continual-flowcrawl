@@ -1,0 +1,322 @@
+import test from 'ava';
+const { serial } = test;
+import {
+  addCreator,
+  mergeHars,
+  addExtraFieldsToHar
+} from '../../lib/support/har/index.js';
+
+let har;
+
+const totalResultsBase = [
+  {
+    googleWebVitals: {},
+    visualMetrics: [
+      {
+        SpeedIndex: 100,
+        PerceptualSpeedIndex: 200,
+        ContentfulSpeedIndex: 300,
+        VisualProgress: [
+          { timestamp: 0, percent: 0 },
+          { timestamp: 10, percent: 50 },
+          { timestamp: 20, percent: 100 }
+        ]
+      }
+    ],
+    info: {
+      url: 'https://example.com'
+    },
+    cpu: [
+      {
+        longTasks: {
+          tasks: 1,
+          totalBlockingTime: 10
+        }
+      }
+    ],
+    browserScripts: [
+      {
+        timings: {
+          firstPaint: 100,
+          largestContentfulPaint: {
+            renderTime: 200
+          }
+        }
+      }
+    ]
+  }
+];
+
+serial.beforeEach('Setup the HAR', () => {
+  har = {
+    log: {
+      version: '1.2',
+      browser: {
+        name: 'Chrome',
+        version: '42.0.2311.90',
+        comment: ''
+      },
+      pages: [
+        {
+          id: 'page_0'
+        }
+      ],
+      entries: [
+        {
+          pageref: 'page_0'
+        }
+      ]
+    }
+  };
+});
+
+test('Add creator if missing', t => {
+  addCreator(har, 'foo');
+  t.is(har.log.creator.name, 'Browsertime');
+  t.is(har.log.creator.comment, 'foo');
+});
+
+test('Not add comment to creator unless specified', t => {
+  addCreator(har);
+  t.is(har.log.creator.name, 'Browsertime');
+  t.is(har.log.creator.comment, undefined);
+});
+
+test('Merge two hars', t => {
+  addCreator(har);
+
+  let har2 = {
+    log: {
+      version: 'kjsdhfksa',
+      browser: {
+        name: 'jksdhfjksd',
+        version: 'jkdhfkjsdfdkjsf',
+        comment: ''
+      },
+      pages: [
+        {
+          id: 'page_0'
+        },
+        {
+          id: 'page_1'
+        }
+      ],
+      entries: [
+        {
+          pageref: 'page_0'
+        },
+        {
+          pageref: 'page_1'
+        }
+      ]
+    }
+  };
+
+  let combinedHar = mergeHars([har, har2]);
+
+  t.deepEqual(combinedHar.log.pages, [
+    {
+      id: 'page_0'
+    },
+    {
+      id: 'page_0-1'
+    },
+    {
+      id: 'page_1'
+    }
+  ]);
+
+  t.deepEqual(combinedHar.log.entries, [
+    {
+      pageref: 'page_0'
+    },
+    {
+      pageref: 'page_0-1'
+    },
+    {
+      pageref: 'page_1'
+    }
+  ]);
+
+  t.is(combinedHar.log.version, '1.2');
+  t.is(combinedHar.log.creator.name, 'Browsertime');
+});
+
+test('Gracefully handle missing data', t => {
+  addExtraFieldsToHar();
+  t.pass();
+});
+
+test('Add visual metrics if given', t => {
+  const options = {
+    iterations: 1
+  };
+  const totalResults = totalResultsBase;
+  har.log.pages[0].pageTimings = {};
+  addExtraFieldsToHar(totalResults, har, options);
+  t.deepEqual(har.log.pages[0], {
+    id: 'page_0',
+    _meta: {
+      connectivity: 'native'
+    },
+    _visualMetrics: {
+      SpeedIndex: 100,
+      PerceptualSpeedIndex: 200,
+      ContentfulSpeedIndex: 300,
+      VisualProgress: {
+        0: 0,
+        10: 50,
+        20: 100
+      }
+    },
+    pageTimings: {
+      _largestContentfulPaint: 200
+    },
+    _cpu: {
+      longTasks: {
+        tasks: 1,
+        totalBlockingTime: 10
+      }
+    }
+  });
+});
+
+test('Gracefully handle missing cpu and visual metrics', t => {
+  const totalResults = totalResultsBase;
+  const options = {
+    iterations: 1
+  };
+  har.log.pages[0].pageTimings = {};
+
+  totalResults[0].visualMetrics = [];
+  totalResults[0].cpu = [{}];
+  addExtraFieldsToHar(totalResults, har, options);
+  t.deepEqual(har.log.pages[0], {
+    id: 'page_0',
+    _meta: {
+      connectivity: 'native'
+    },
+    _cpu: {},
+    _visualMetrics: {},
+    pageTimings: {
+      _firstPaint: 100,
+      _largestContentfulPaint: 200
+    }
+  });
+});
+
+test('Add long-task ranges to pageTimings', t => {
+  const totalResults = [
+    {
+      googleWebVitals: {},
+      visualMetrics: [],
+      info: { url: 'https://example.com' },
+      cpu: [{}],
+      browserScripts: [
+        {
+          timings: {},
+          pageinfo: {
+            longTask: [
+              { startTime: 100, duration: 80 },
+              { startTime: 250, duration: 60 }
+            ]
+          }
+        }
+      ]
+    }
+  ];
+  har.log.pages[0].pageTimings = {};
+  addExtraFieldsToHar(totalResults, har, { iterations: 1 });
+  t.deepEqual(har.log.pages[0].pageTimings._longTasks, [
+    [100, 180],
+    [250, 310]
+  ]);
+});
+
+test('Add user-timing marks and measures to pageTimings', t => {
+  const totalResults = [
+    {
+      googleWebVitals: {},
+      visualMetrics: [],
+      info: { url: 'https://example.com' },
+      cpu: [{}],
+      browserScripts: [
+        {
+          timings: {
+            userTimings: {
+              marks: [
+                { name: 'app-init', startTime: 50 },
+                { name: 'app-ready', startTime: 250 }
+              ],
+              measures: [
+                { name: 'init-to-ready', startTime: 50, duration: 200 }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ];
+  har.log.pages[0].pageTimings = {};
+  addExtraFieldsToHar(totalResults, har, { iterations: 1 });
+  t.deepEqual(har.log.pages[0].pageTimings._userTimings, {
+    'app-init': 50,
+    'app-ready': 250,
+    'init-to-ready': 50
+  });
+});
+
+test('Emit empty `_longTasks` when instrumented but no tasks observed', t => {
+  // Tri-state presence contract used by downstream waterfall viewers:
+  // an empty array means "instrumented, observed none" — distinct from
+  // a missing field, which signals "this producer can't instrument".
+  const totalResults = [
+    {
+      googleWebVitals: {},
+      visualMetrics: [],
+      info: { url: 'https://example.com' },
+      cpu: [{}],
+      browserScripts: [
+        {
+          timings: { userTimings: { marks: [], measures: [] } },
+          pageinfo: { longTask: [] }
+        }
+      ]
+    }
+  ];
+  har.log.pages[0].pageTimings = {};
+  addExtraFieldsToHar(totalResults, har, { iterations: 1 });
+  t.deepEqual(har.log.pages[0].pageTimings._longTasks, []);
+  t.is(har.log.pages[0].pageTimings._userTimings, undefined);
+});
+
+test('Omit `_longTasks` entirely when pageinfo has no longTask field', t => {
+  // Field absent = parser couldn't instrument — distinct from `[]`.
+  const totalResults = [
+    {
+      googleWebVitals: {},
+      visualMetrics: [],
+      info: { url: 'https://example.com' },
+      cpu: [{}],
+      browserScripts: [
+        {
+          timings: {},
+          pageinfo: {}
+        }
+      ]
+    }
+  ];
+  har.log.pages[0].pageTimings = {};
+  addExtraFieldsToHar(totalResults, har, { iterations: 1 });
+  t.is(har.log.pages[0].pageTimings._longTasks, undefined);
+});
+
+test('Tag the first entry of each page with `_documentURL`', t => {
+  // Cross-origin tinting in waterfall-tools reads `entries[0]._documentURL`
+  // to decide which request labels are third-party — without this, the
+  // viewer falls back to a no-op (every request looks same-origin).
+  const totalResults = totalResultsBase;
+  har.log.pages[0].pageTimings = {};
+  addExtraFieldsToHar(totalResults, har, { iterations: 1 });
+  t.is(har.log.entries[0]._documentURL, 'https://example.com');
+});

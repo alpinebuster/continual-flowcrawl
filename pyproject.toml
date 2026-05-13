@@ -1,0 +1,66 @@
+[project]
+name = "continual-flowcrawl"
+version = "1.1.6"
+description = "Crawl, extract webpages, and capture PCAP through ECH/TOR/VPN."
+authors = [
+    {name = "zzz", email = "imzqqq@hotmail.com"}
+]
+license = {text = "GPL"}
+readme = "README.md"
+requires-python = ">=3.11,<3.14.1"
+dependencies = [
+    "pysocks (>=1.7.1)",
+    "beautifulsoup4 (>=4.14.3)",
+    "yara-python (>=4.5.4)",
+    "lxml (>=6.1.0)",
+    "networkx (>=3.6.1)",
+    "pyvis (>=0.3.2)",
+    "bs4 (>=0.0.2,<0.0.3)",
+    "pandas (>=3.0.2,<4.0.0)",
+    "numpy (>=2.4.4,<3.0.0)",
+    "scikit-learn (>=1.8.0,<2.0.0)",
+    "seaborn (>=0.13.2,<0.14.0)",
+    "umap-learn (>=0.5.12,<0.6.0)",
+]
+
+[tool.poetry]
+packages = [
+    { include = "flowcrawl" }
+]
+
+[[tool.poetry.source]]
+name = "163"
+url = "https://mirrors.163.com/pypi/simple/"
+priority = "supplemental"
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+priority = "supplemental"
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "primary"
+[[tool.poetry.source]]
+name = "nvidia"
+url = "https://pypi.nvidia.com"
+priority = "explicit"
+
+[tool.poetry.scripts]
+flowcrawl = "flowcrawl.main:main"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^7.2.0"
+
+[build-system]
+# The upper bounds here are defensive, intended to prevent
+# runtime errors caused by build system changes.
+# We are happy to raise these upper bounds upon request,
+# provided we check that it's safe to do so (i.e. that CI passes).
+requires = [
+    "poetry-core>=2.0.0,<3.0.0",
+    "setuptools>=75.6.0",
+    "wheel>=0.45.1",
+    "setuptools_rust>=1.3",
+]
+build-backend = "poetry.core.masonry.api"

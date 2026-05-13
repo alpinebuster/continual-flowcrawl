@@ -1,0 +1,11 @@
+*
+!bin
+!lib
+!package.json
+!docker
+!vendor
+!browsertime
+!browserscripts
+!browsersupport
+!index.js
+!visualmetrics

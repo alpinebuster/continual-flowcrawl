@@ -1,0 +1,90 @@
+#
+# How to run:
+#
+#   ```sh
+#   docker compose --profile flowcrawl up -d
+#   docker compose --profile flowcrawl down
+#   ```
+#
+networks:
+  clashnet:
+  v2raynet:
+
+services:
+  v2raya:
+    profiles: ["v2ray"]
+    image: mzz2017/v2raya:latest
+    container_name: v2raya
+    privileged: true
+    restart: unless-stopped
+    volumes:
+      - /home/datum/v2raya:/etc/v2raya
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - '20170-20173:20170-20173'
+    networks:
+      - v2raynet
+
+  clash:
+    profiles: ["flowcrawl"]
+    image: docker.io/metacubex/mihomo:Alpha
+    container_name: clash
+    restart: unless-stopped
+    ports:
+      - '27890:27890'
+      - '9090:9090' # external controller (Restful API)
+    volumes:
+      - ./config/vmess.yaml:/root/.config/mihomo/config.yaml
+      # - ./ui:/root/.config/mihomo/ui/
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    # devices:
+    #   - /dev/net/tun
+    # pid: host
+    # ipc: host
+    # network_mode: "host" # `host` on Linux, `bridge` for others
+    cap_add:
+      - ALL
+    healthcheck:
+      # Try to connect to '127.0.0.1:27890' without sending any data
+      test: ["CMD", "sh", "-c", "nc -z 127.0.0.1 27890"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - clashnet
+
+  metacubexd:
+    profiles: ["flowcrawl"]
+    image: ghcr.io/metacubex/metacubexd
+    container_name: metacubexd
+    restart: unless-stopped
+    ports:
+      - '9093:80'
+    networks:
+      - clashnet
+
+  tor:
+    profiles: ["flowcrawl"]
+    depends_on:
+      clash:
+        condition: service_healthy
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    pull_policy: never
+    image: alpinebuster/tor
+    container_name: tor
+    restart: always
+    ports:
+      - '9050:9050'
+      - '9051:9051'
+    volumes:
+      - ./config:/etc/tor
+      - ./data:/tmp
+    networks:
+      - clashnet
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
