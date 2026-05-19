@@ -166,6 +166,9 @@ async def worker(worker_id, network, queue):
             break
 
         url, output_dir, idx = task
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+
         # Startup jitter
         await asyncio.sleep(random.uniform(1.2, 12))
 
@@ -304,9 +307,6 @@ def main():
             output_dir = os.path.abspath(
                 f"{domain_output_dir}/{timestamp}-{uid}"
             )
-
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir, exist_ok=True)
 
             print(f"[+] Create task_{task_id} [{url}, output_dir: {output_dir}]")
             tasks.append((url, output_dir, task_id))
