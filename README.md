@@ -79,7 +79,7 @@ docker run --rm \
     https://tls-ech.dev/
 
 # or
-nohup python -u ./flowcrawl/run_browsertime.py data/links-for-request/ech/links-CF.txt > run_browsertime.log 2>&1 &
+nohup python -u ./flowcrawl/run_browsertime.py ./data/links-for-request/ech/links-CF.txt -o ./output/_doh_ech_enabled > run_browsertime.log 2>&1 &
 ```
 
 Check `encrypted_client_hello` filed in the `chromeNetlog-*.json`, you will see something like this:

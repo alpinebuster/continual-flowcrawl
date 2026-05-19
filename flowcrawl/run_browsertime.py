@@ -287,6 +287,8 @@ def main():
     args = parser.parse_args()
     input_path = args.input_path
     output_path = args.output_path
+    if not os.path.exists(output_path):
+        os.makedirs(output_path, exist_ok=True)
 
     ensure_networks(NETWORKS)
 
@@ -344,7 +346,7 @@ if __name__ == "__main__":
     nohup python -u \
       ./flowcrawl/run_browsertime.py \
       data/links-for-request/ech/links-CF.txt \
-      -o /output/_doh_ech_enabled \
+      -o ./output/_doh_ech_enabled \
       > run_browsertime.log 2>&1 &
 
     ps -aux | grep run_browsertime
