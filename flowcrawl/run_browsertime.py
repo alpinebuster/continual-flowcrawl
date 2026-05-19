@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import os
 import uuid
@@ -44,6 +45,8 @@ def collect_txt_files(input_path: str) -> list[Path]:
 
 def is_task_done(output_dir: str, samples_per_site: int = 100) -> bool:
     p = Path(output_dir)
+    if not p.is_dir():
+        return False
 
     valid = 0
     for d in p.iterdir():
@@ -267,14 +270,27 @@ async def main_async(tasks):
 
 def main():
     print("=== SCRIPT STARTED ===", flush=True)
-    if len(sys.argv) < 2:
-        print("Usage: `python run_browsertime.py <file_or_dir>`")
-        return
+    # if len(sys.argv) < 2:
+    #     print("Usage: `python run_browsertime.py <file_or_dir>`")
+    #     return
+
+    parser = argparse.ArgumentParser(description="Run browsertime tasks.")
+    parser.add_argument(
+        "input_path",
+        help="Path to file or directory containing TXT files.",
+    )
+    parser.add_argument(
+        "-o", "--output_path",
+        default="output",
+        help="Base directory for output (default: 'output')"
+    )
+    args = parser.parse_args()
+    input_path = args.input_path
+    output_path = args.output_path
+
     ensure_networks(NETWORKS)
 
-    input_path = sys.argv[1]
     txt_files = collect_txt_files(input_path)
-
     if not txt_files:
         print("No txt files found.")
         return
@@ -291,7 +307,7 @@ def main():
         parsed = urlparse(url)
         domain = parsed.netloc
 
-        domain_output_dir = os.path.abspath(f"output/{domain}")
+        domain_output_dir = os.path.abspath(f"{output_path}/{domain}")
         # Skip completed
         if is_task_done(
             domain_output_dir,
@@ -328,6 +344,7 @@ if __name__ == "__main__":
     nohup python -u \
       ./flowcrawl/run_browsertime.py \
       data/links-for-request/ech/links-CF.txt \
+      -o /output/_doh_ech_enabled \
       > run_browsertime.log 2>&1 &
 
     ps -aux | grep run_browsertime
