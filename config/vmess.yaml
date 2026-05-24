@@ -92,7 +92,7 @@ proxy-groups:
       - 🇺🇸 2倍率-美国15
 
   - name: ♻️ 自动选择
-    type: url-test
+    type: select
     url: https://cp.cloudflare.com
     interval: 86400
     proxies:

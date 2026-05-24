@@ -1736,7 +1736,7 @@ proxy-groups:
   - Lebanon_None_trojan_11130
   - Sweden_Stockholm_ss_11131
 - name: 自动选择
-  type: url-test
+  type: select
   url: http://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50

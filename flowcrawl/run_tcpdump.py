@@ -6,6 +6,7 @@ import sys
 import time
 import os
 import argparse
+import csv
 
 PROCESSES = [] # type:ignore
 
@@ -120,12 +121,28 @@ def main(link_file: str, output_dirname: str):
     print(f"[+] BRIDGE   = {BRIDGE}")
     print(f"[+] SUBNET   = {SUBNET}")
 
-    with open(link_file, "r") as f:
-        websites = [
-            line.strip()
-            for line in f
-            if line.strip()
-        ]
+    ext = os.path.splitext(link_file)[1].lower()
+    if ext == ".txt":
+        with open(link_file, "r", encoding="utf-8") as f:
+            websites = [
+                line.strip()
+                for line in f
+                if line.strip()
+            ]
+
+    elif ext == ".csv":
+        with open(link_file, "r", encoding="utf-8") as f:
+            reader = csv.reader(f)
+
+            websites = [
+                row[1].strip()
+                for row in reader
+                if len(row) >= 2 and row[1].strip()
+            ]
+
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
+
     print(f"[+] Loaded {len(websites)} websites")
     for idx, site in enumerate(websites):
         if not site.startswith("http://") and not site.startswith("https://"):
@@ -167,6 +184,7 @@ def main(link_file: str, output_dirname: str):
             "host", CLASH_IP,
             "and", "not", "host", TOR_IP,
             "and", "not", "port", "9090",
+            "and", "not", "port", "9091",
             "and", "not", "arp",
             # "and not net", SUBNET,
             "-nn", "-s", "0",
@@ -223,9 +241,10 @@ if __name__ == "__main__":
 
        echo "$(whoami) ALL=(ALL) NOPASSWD: $(which tcpdump)" | sudo tee /etc/sudoers.d/tcpdump
        sudo chmod 440 /etc/sudoers.d/tcpdump
+
        nohup python3 -u flowcrawl/run_tcpdump.py \
-        --output data/vless/pcap \
-        --link-file data/links-for-request/top-1000-websites.txt \
+        --output data/continual_flowcrawl_data-large/vmess/pcap \
+        --link-file data/links-for-request/Tranco/tranco_5XYPN-top.csv \
         > run_tcpdump.log 2>&1 &
     """
     parser = argparse.ArgumentParser()

@@ -67,3 +67,4 @@ venv.bak/
 *.tar.gz
 doh_ech
 book
+test.py
