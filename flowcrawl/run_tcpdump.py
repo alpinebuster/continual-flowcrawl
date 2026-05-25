@@ -4,6 +4,7 @@ import subprocess
 import signal
 import sys
 import time
+from datetime import datetime
 import os
 import argparse
 import csv
@@ -159,7 +160,10 @@ def main(link_file: str, output_dirname: str):
         print(f"[+] Output dir: {output_dir}")
 
         print("\n" + "=" * 80)
-        print(f"[{idx+1}/{len(websites)}] Processing: {url}")
+        print(
+            f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
+            f"[{idx+1}/{len(websites)}] Processing: {url}"
+        )
         print("=" * 80)
 
         cmd1 = [
@@ -185,6 +189,7 @@ def main(link_file: str, output_dirname: str):
             "and", "not", "host", TOR_IP,
             "and", "not", "port", "9090",
             "and", "not", "port", "9091",
+            "and", "not", "port", "9093",
             "and", "not", "arp",
             # "and not net", SUBNET,
             "-nn", "-s", "0",
@@ -243,8 +248,8 @@ if __name__ == "__main__":
        sudo chmod 440 /etc/sudoers.d/tcpdump
 
        nohup python3 -u flowcrawl/run_tcpdump.py \
-        --output data/continual_flowcrawl_data-large/vmess/pcap \
-        --link-file data/links-for-request/Tranco/tranco_5XYPN-top.csv \
+        --output data/continual_flowcrawl_data-test_only/vmess/pcap \
+        --link-file data/links-for-request/Tranco/tranco_5XYPN-test_only.csv \
         > run_tcpdump.log 2>&1 &
     """
     parser = argparse.ArgumentParser()

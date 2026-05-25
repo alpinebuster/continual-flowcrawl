@@ -6,6 +6,7 @@ import signal
 from pathlib import Path
 import sys
 import time
+from datetime import datetime
 import os
 import csv
 
@@ -159,7 +160,10 @@ def main(link_file: str, output_dirname: str):
         print(f"[+] Output dir: {output_dir}")
 
         print("\n" + "=" * 80)
-        print(f"[{idx+1}/{len(websites)}] Processing: {url}")
+        print(
+            f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
+            f"[{idx+1}/{len(websites)}] Processing: {url}"
+        )
         print("=" * 80)
 
         cmd1 = [
@@ -179,6 +183,7 @@ def main(link_file: str, output_dirname: str):
                 "tcp", "port", "27890",
                 "or", "port", "9090",
                 "or", "port", "9091",
+                "or", "port", "9093",
                 "or", "arp",
             ")",
 
@@ -236,8 +241,8 @@ if __name__ == "__main__":
        sudo chmod 440 /etc/sudoers.d/tcpdump
 
        nohup python3 -u flowcrawl/run_tcpdump-clash_only.py \
-        --output data/continual_flowcrawl_data-large/vmess/pcap-clash_only \
-        --link-file data/links-for-request/Tranco/tranco_5XYPN-top.csv \
+        --output data/continual_flowcrawl_data-test_only/trojan/pcap-clash_only \
+        --link-file data/links-for-request/Tranco/tranco_5XYPN-test_only.csv \
         > run_tcpdump-clash_only.log 2>&1 &
     """
     parser = argparse.ArgumentParser()
