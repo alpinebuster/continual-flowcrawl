@@ -241,7 +241,7 @@ if __name__ == "__main__":
        sudo chmod 440 /etc/sudoers.d/tcpdump
 
        nohup python3 -u flowcrawl/run_tcpdump-clash_only.py \
-        --output data/continual_flowcrawl_data-test_only/trojan/pcap-clash_only \
+        --output data/continual_flowcrawl_data-test_only/ss/pcap-clash_only \
         --link-file data/links-for-request/Tranco/tranco_5XYPN-test_only.csv \
         > run_tcpdump-clash_only.log 2>&1 &
     """
