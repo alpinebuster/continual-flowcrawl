@@ -30,34 +30,24 @@ docker build -t sitespeedio/browsertime .
 
 # Avoid broadcasting/ARP/communication with other containers on default bridge `docker0`
 docker network create flowcrawl-net
-#
-# --browser firefox \
-# --firefox.preference "network.trr.mode:3" \
-# --firefox.preference "network.trr.uri:https://cloudflare-dns.com/dns-query" \
-# --firefox.preference "network.dns.echconfig.enabled:true" \
-# --firefox.preference "network.dns.use_https_rr_as_altsvc:true" \
-# --firefox.preference "network.trr.confirmation_telemetry:false" \
-# --firefox.collectMozLog true --firefox.geckoProfiler true \
-#
-# --firefox.preference browser.safebrowsing.malware.enabled:false \
-# --firefox.preference browser.safebrowsing.phishing.enabled:false \
-# --firefox.preference browser.safebrowsing.downloads.enabled:false \
-# --firefox.preference browser.ping-centre.telemetry:false \
-# --firefox.preference toolkit.telemetry.enabled:false \
-# --firefox.preference datareporting.healthreport.uploadEnabled:false \
-#
-# --firefox.preference app.update.enabled:false \
-# --firefox.preference extensions.update.enabled:false \
-# --firefox.preference browser.search.update:false \
-#
-# --firefox.preference identity.fxaccounts.enabled:false \
-# --firefox.preference services.sync.engine.addons:false \
-# --firefox.preference services.sync.engine.passwords:false \
-#
-# --firefox.preference extensions.enabledScopes:0 \
-# --firefox.preference extensions.autoDisableScopes:0 \
-# --firefox.preference beacon.enabled:false \
-#
+
+docker run --rm \
+    --network flowcrawl-net \
+    -v "$(pwd)":/browsertime \
+    sitespeedio/browsertime:latest \
+    -n 2 \
+    --video --tcpdump --visualMetrics \
+    --browser firefox \
+    --firefox.preference "network.trr.mode=2" \
+    --firefox.preference "network.trr.uri=https://cloudflare-dns.com/dns-query" \
+    --firefox.preference "network.dns.echconfig.enabled=true" \
+    --firefox.preference "toolkit.telemetry.enabled=false" \
+    --firefox.preference "datareporting.healthreport.uploadEnabled=false" \
+    --firefox.preference "app.update.enabled=false" \
+    --firefox.preference "browser.search.update=false" \
+    --firefox.preference "extensions.enabledScopes=0" \
+    https://tls-ech.dev/
+
 docker run --rm \
     --network flowcrawl-net \
     -v "$(pwd)":/browsertime \

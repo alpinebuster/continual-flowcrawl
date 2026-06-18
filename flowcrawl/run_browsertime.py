@@ -168,7 +168,7 @@ async def worker(worker_id, network, queue):
             queue.task_done()
             break
 
-        url, output_dir, idx = task
+        url, output_dir, idx, browser = task
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
 
@@ -177,38 +177,73 @@ async def worker(worker_id, network, queue):
 
         container_name = f"bt-w_{worker_id}-i_{idx}-{int(time.time())}"
         nopasswd_config_path = os.path.join(os.getcwd(), "config/browsertime-sudoers/nopasswd")
-        cmd = [
-            "docker", "run",
-            "--rm",
-            "--network", network,
-            "--name", container_name,
-            "-v", f"{output_dir}:{output_dir}",
-            # NOTE: this fixes `sudo: a terminal is required to read the password;`
-            "-v", f"{nopasswd_config_path}:/etc/sudoers.d/nopasswd:ro",
-            DOCKER_IMAGE,
 
-            "-n", "1",
-            "--resultDir", f"{output_dir}",
-            "--video", "--tcpdump", "--visualMetrics",
-            # Wait up to 10 seconds for elements
-            # "--timeouts.elementWait", "10000",
+        if browser == "chrome":
+            cmd = [
+                "docker", "run",
+                "--rm",
+                "--network", network,
+                "--name", container_name,
+                "-v", f"{output_dir}:{output_dir}",
+                # NOTE: this fixes `sudo: a terminal is required to read the password;`
+                "-v", f"{nopasswd_config_path}:/etc/sudoers.d/nopasswd:ro",
+                DOCKER_IMAGE,
 
-            "--browser", "chrome",
-            "--chrome.args", "enable-features=EncryptedClientHello",
-            "--chrome.args", "use-dns-https-alpn",
-            "--chrome.args", "force-dns-over-https=https://cloudflare-dns.com/dns-query",
-            "--chrome.args", "disable-async-dns",
-            "--chrome.collectNetLog",
-            "--chrome.args", "disable-background-networking",
-            "--chrome.args", "disable-component-update",
-            "--chrome.args", "disable-sync",
-            "--chrome.args", "disable-default-apps",
-            "--chrome.args", "disable-domain-reliability",
-            "--chrome.args", "disable-extensions",
+                "-n", "1",
+                "--resultDir", f"{output_dir}",
+                "--video", "--tcpdump", "--visualMetrics",
+                # Wait up to 10 seconds for elements
+                # "--timeouts.elementWait", "10000",
 
-            # "--chrome.args", "user-data-dir=/tmp/chrome-profile-bt",
-            url,
-        ]
+                "--browser", "chrome",
+                "--chrome.args", "enable-features=EncryptedClientHello",
+                "--chrome.args", "use-dns-https-alpn",
+                "--chrome.args", "force-dns-over-https=https://cloudflare-dns.com/dns-query",
+                "--chrome.args", "disable-async-dns",
+                "--chrome.collectNetLog",
+                "--chrome.args", "disable-background-networking",
+                "--chrome.args", "disable-component-update",
+                "--chrome.args", "disable-sync",
+                "--chrome.args", "disable-default-apps",
+                "--chrome.args", "disable-domain-reliability",
+                "--chrome.args", "disable-extensions",
+
+                # "--chrome.args", "user-data-dir=/tmp/chrome-profile-bt",
+                url,
+            ]
+        else:
+            cmd = [
+                "docker", "run",
+                "--rm",
+                "--network", network,
+                "--name", container_name,
+                "-v", f"{output_dir}:{output_dir}",
+                "-v", f"{nopasswd_config_path}:/etc/sudoers.d/nopasswd:ro",
+                DOCKER_IMAGE,
+
+                "-n", "1",
+                "--resultDir", f"{output_dir}",
+                "--video", "--tcpdump", "--visualMetrics",
+
+                "--browser", "firefox",
+                # DNS over HTTPS (Cloudflare)
+                "--firefox.preference", "network.trr.mode=2",
+                "--firefox.preference", "network.trr.uri=https://cloudflare-dns.com/dns-query",
+
+                # Encrypted Client Hello
+                "--firefox.preference", "network.dns.echconfig.enabled=true",
+
+                # disable telemetry/background stuff
+                "--firefox.preference", "toolkit.telemetry.enabled=false",
+                "--firefox.preference", "datareporting.healthreport.uploadEnabled=false",
+                "--firefox.preference", "app.update.enabled=false",
+                "--firefox.preference", "browser.search.update=false",
+
+                # disable extensions
+                "--firefox.preference", "extensions.enabledScopes=0",
+
+                url,
+            ]
 
         success = False
         for attempt in range(RETRY):
@@ -284,9 +319,16 @@ def main():
         default="output",
         help="Base directory for output (default: 'output')"
     )
+    parser.add_argument(
+        "-b", "--browser",
+        default="chrome",
+        help="Which browser to use, default to chrome (chrome, firefox)"
+    )
     args = parser.parse_args()
     input_path = args.input_path
     output_path = args.output_path
+    browser = args.browser
+
     if not os.path.exists(output_path):
         os.makedirs(output_path, exist_ok=True)
 
@@ -327,7 +369,7 @@ def main():
             )
 
             print(f"[+] Create task_{task_id} [{url}, output_dir: {output_dir}]")
-            tasks.append((url, output_dir, task_id))
+            tasks.append((url, output_dir, task_id, browser))
             task_id += 1
 
     random.shuffle(tasks)
