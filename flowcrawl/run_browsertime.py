@@ -383,12 +383,59 @@ def main():
 
 if __name__ == "__main__":
     """
+    # Aliyun: https://dns.alidns.com/dns-query
+    # Google: https://dns.google/dns-query
+    # Tencent: https://doh.pub/dns-query
+    curl -H "accept: application/dns-json" "https://cloudflare-dns.com/dns-query?name=https://tls-ech.dev/"
+
+    # Avoid broadcasting/ARP/communication with other containers on default bridge `docker0`
+    docker network create flowcrawl-net
+
+    docker run --rm \
+        --network flowcrawl-net \
+        -v "$(pwd)":/browsertime \
+        sitespeedio/browsertime:latest \
+        -n 2 \
+        --video --tcpdump --visualMetrics \
+        --browser firefox \
+        --firefox.preference "network.trr.mode=2" \
+        --firefox.preference "network.trr.uri=https://cloudflare-dns.com/dns-query" \
+        --firefox.preference "network.dns.echconfig.enabled=true" \
+        --firefox.preference "toolkit.telemetry.enabled=false" \
+        --firefox.preference "datareporting.healthreport.uploadEnabled=false" \
+        --firefox.preference "app.update.enabled=false" \
+        --firefox.preference "browser.search.update=false" \
+        --firefox.preference "extensions.enabledScopes=0" \
+        https://tls-ech.dev/
+
+    docker run --rm \
+        --network flowcrawl-net \
+        -v "$(pwd)":/browsertime \
+        sitespeedio/browsertime:latest \
+        -n 2 \
+        --video --tcpdump --visualMetrics \
+        --browser chrome \
+        --chrome.args "enable-features=EncryptedClientHello" \
+        --chrome.args "use-dns-https-alpn" \
+        --chrome.args "force-dns-over-https=https://cloudflare-dns.com/dns-query" \
+        --chrome.args "disable-async-dns" \
+        --chrome.collectNetLog \
+        --chrome.args "disable-background-networking" \
+        --chrome.args "disable-component-update" \
+        --chrome.args "disable-sync" \
+        --chrome.args "disable-default-apps" \
+        --chrome.args "disable-domain-reliability" \
+        --chrome.args "disable-extensions" \
+        https://tls-ech.dev/
+
+
     Example:
 
     nohup python -u \
       ./flowcrawl/run_browsertime.py \
-      data/links-for-request/ech/links-CF.txt \
-      -o ./output/_doh_ech_enabled \
+      ./data/links-for-request/ech/links-CF.txt \
+      -o ./output/_doh_ech_enabled-firefox \
+      --browser firefox \
       > run_browsertime.log 2>&1 &
 
     ps -aux | grep run_browsertime
