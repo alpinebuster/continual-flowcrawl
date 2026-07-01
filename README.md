@@ -26,7 +26,8 @@ See more configurations in `https://www.sitespeed.io/documentation/browsertime/c
 # Tencent: https://doh.pub/dns-query
 curl -H "accept: application/dns-json" "https://cloudflare-dns.com/dns-query?name=https://tls-ech.dev/"
 
-docker build -t sitespeedio/browsertime .
+sudo chown root:root config/browsertime-sudoers/nopasswd
+sudo chmod 0440 config/browsertime-sudoers/nopasswd
 
 # Avoid broadcasting/ARP/communication with other containers on default bridge `docker0`
 docker network create flowcrawl-net
@@ -34,6 +35,7 @@ docker network create flowcrawl-net
 docker run --rm \
     --network flowcrawl-net \
     -v "$(pwd)":/browsertime \
+    -v ./config/browsertime-sudoers/nopasswd:/etc/sudoers.d/nopasswd:ro \
     sitespeedio/browsertime:latest \
     -n 2 \
     --video --tcpdump --visualMetrics \
@@ -51,6 +53,7 @@ docker run --rm \
 docker run --rm \
     --network flowcrawl-net \
     -v "$(pwd)":/browsertime \
+    -v ./config/browsertime-sudoers/nopasswd:/etc/sudoers.d/nopasswd:ro \
     sitespeedio/browsertime:latest \
     -n 2 \
     --video --tcpdump --visualMetrics \
